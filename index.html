@@ -85,7 +85,7 @@
 
         <h3>Senarai Peserta Berdaftar</h3>
         <table id="table-pendaftaran">
-<thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th><th>No. Badan</th></tr></thead>
+<thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th><th>No. Badan</th><th>Tindakan</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -382,10 +382,41 @@ let noBadan = '';
             row.insertCell().textContent = p.jantina;
 row.insertCell().textContent = p.rumah;
             row.insertCell().textContent = p.peserta;
-            // Tambah Nombor Badan
-            row.insertCell().textContent = p.noBadan || '-'; // Paparkan '-' jika tiada no. badan (cth: 4x100m)
+            row.insertCell().textContent = p.noBadan || '-'; 
+
+            // Tambah Butang Padam (Lajur Tindakan)
+            const cellTindakan = row.insertCell();
+            const btnPadam = document.createElement('button');
+            btnPadam.textContent = '❌ Padam';
+            btnPadam.className = 'btn'; // Gunakan gaya sedia ada
+            btnPadam.style.backgroundColor = '#d32f2f'; // Warna Merah untuk Padam
+            btnPadam.style.padding = '5px 10px';
+            btnPadam.style.fontSize = '0.8em';
+            btnPadam.onclick = () => padamPeserta(p.id, p.peserta); // Panggil fungsi padam
+            cellTindakan.appendChild(btnPadam);
         });
     }
+
+    // --- Fungsi untuk Memadam Peserta dari Firebase ---
+function padamPeserta(pesertaId, namaPeserta) {
+    if (confirm(`Adakah anda pasti mahu memadam peserta "${namaPeserta}"? Tindakan ini tidak boleh diundur.`)) {
+        showLoading();
+        
+        // Rujukan ke data yang tepat di Firebase: pendaftaran/[pesertaId]
+        dbRefPendaftaran.child(pesertaId).remove()
+            .then(() => {
+                alert(`Peserta "${namaPeserta}" berjaya dipadam dari Firebase.`);
+                // Data akan dimuat semula secara automatik oleh listener
+            })
+            .catch(error => {
+                console.error("Ralat memadam peserta:", error);
+                alert('Gagal memadam peserta. Lihat konsol untuk ralat.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+}
 
     // --- Halaman Jana Acara (Firebase Write) ---
     function janaAcara() {
@@ -643,4 +674,5 @@ row.insertCell().textContent = p.rumah;
 
 </body>
 </html>
+
 
