@@ -264,18 +264,22 @@
 
     function muatkanAcaraPilihan() {
         const selects = ['reg-acara', 'jana-acara', 'kep-acara'];
-        selects.forEach(selectId => {
+selects.forEach(selectId => {
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
-let selectedKategori = 'Tahun 6'; // Nilai default yang paling luas
-            if (selectId.startsWith('reg')) {
-                selectedKategori = document.getElementById('reg-kategori').value;
-            } else if (selectId.startsWith('jana')) {
-                selectedKategori = document.getElementById('jana-kategori').value;
-            } else if (selectId.startsWith('kep')) {
-                selectedKategori = document.getElementById('kep-kategori').value;
-            }
+            let selectedKategori = 'Tahun 6'; // Nilai default yang paling luas
+            const currentValue = selectElement.value; // Pastikan currentValue diisytiharkan di sini
+            
+            if (selectId.startsWith('reg')) {
+                selectedKategori = document.getElementById('reg-kategori').value;
+            } else if (selectId.startsWith('jana')) {
+                selectedKategori = document.getElementById('jana-kategori').value;
+            } else if (selectId.startsWith('kep')) {
+                selectedKategori = document.getElementById('kep-kategori').value;
+            }
+            
+            selectElement.innerHTML = '';
             
             let firstAcara = '';
             ACARA_SEMUA.forEach(acara => {
@@ -334,6 +338,8 @@ const divIndividu = document.getElementById('div-nama-individu');
     }
 
     document.getElementById('reg-kategori').onchange = muatkanAcaraPilihan;
+    document.getElementById('jana-kategori').onchange = muatkanAcaraPilihan;
+document.getElementById('kep-kategori').onchange = muatkanAcaraPilihan;
 
     // --- Halaman Daftar Acara (Firebase Write) ---
     document.getElementById('form-daftar-peserta').addEventListener('submit', function(e) {
@@ -688,6 +694,7 @@ function padamPeserta(pesertaId, namaPeserta) {
 
 </body>
 </html>
+
 
 
 
