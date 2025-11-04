@@ -268,9 +268,14 @@
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
-            const selectedKategori = document.getElementById('reg-kategori') ? document.getElementById('reg-kategori').value : 'Tahun 6';
-            const currentValue = selectElement.value;
-            selectElement.innerHTML = '';
+let selectedKategori = 'Tahun 6'; // Nilai default yang paling luas
+            if (selectId.startsWith('reg')) {
+                selectedKategori = document.getElementById('reg-kategori').value;
+            } else if (selectId.startsWith('jana')) {
+                selectedKategori = document.getElementById('jana-kategori').value;
+            } else if (selectId.startsWith('kep')) {
+                selectedKategori = document.getElementById('kep-kategori').value;
+            }
             
             let firstAcara = '';
             ACARA_SEMUA.forEach(acara => {
@@ -303,6 +308,15 @@ const divIndividu = document.getElementById('div-nama-individu');
         const inputNama = document.getElementById('reg-nama');
         const inputNoBadan = document.getElementById('reg-no-badan'); // BARU
         const inputPasukan = document.querySelectorAll('.nama-pasukan');
+
+        // Fungsi untuk menukar input ke huruf besar
+    const toUpperCase = (event) => {
+        event.target.value = event.target.value.toUpperCase();
+    };
+
+    // Tambah event listener
+    if (inputNama) inputNama.addEventListener('input', toUpperCase);
+    if (inputNoBadan) inputNoBadan.addEventListener('input', toUpperCase);
 
         if (acara === '4x100 meter') {
             divIndividu.style.display = 'none';
@@ -674,5 +688,6 @@ function padamPeserta(pesertaId, namaPeserta) {
 
 </body>
 </html>
+
 
 
