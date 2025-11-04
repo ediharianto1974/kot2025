@@ -63,7 +63,16 @@
             <div><label for="reg-kategori">Kategori (Tahun):</label><select id="reg-kategori" required><option value="Tahun 1">Tahun 1</option><option value="Tahun 2">Tahun 2</option><option value="Tahun 3">Tahun 3</option><option value="Tahun 4 dan 5">Tahun 4 dan 5</option><option value="Tahun 6">Tahun 6</option></select></div>
             <div><label for="reg-jantina">Jantina:</label><select id="reg-jantina" required><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
             <div><label for="reg-rumah">Rumah Sukan:</label><select id="reg-rumah" required><option value="Merah">Rumah Sukan Merah</option><option value="Biru">Rumah Sukan Biru</option><option value="Kuning">Rumah Sukan Kuning</option></select></div>
-            <div id="div-nama-individu" style="grid-column: 1 / -1;"><label for="reg-nama">Nama Peserta:</label><input type="text" id="reg-nama" placeholder="Nama Penuh Peserta" required></div>
+<div id="div-nama-individu" style="grid-column: 1 / -1; display: grid; grid-template-columns: 3fr 1fr; gap: 10px;">
+                <div>
+                    <label for="reg-nama">Nama Peserta:</label>
+                    <input type="text" id="reg-nama" placeholder="Nama Penuh Peserta" required>
+                </div>
+                <div>
+                    <label for="reg-no-badan">Nombor Badan:</label>
+                    <input type="text" id="reg-no-badan" placeholder="e.g., A123" required>
+                </div>
+            </div>
             <div id="div-nama-pasukan" style="display: none; grid-column: 1 / -1;">
                 <label>Nama 4 Peserta (4x100m):</label>
                 <input type="text" class="nama-pasukan" placeholder="Peserta 1" required>
@@ -76,7 +85,7 @@
 
         <h3>Senarai Peserta Berdaftar</h3>
         <table id="table-pendaftaran">
-            <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th></tr></thead>
+<thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th><th>No. Badan</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -289,19 +298,22 @@
 
     function toggleNamaInput() {
         const acara = document.getElementById('reg-acara').value;
-        const divIndividu = document.getElementById('div-nama-individu');
+const divIndividu = document.getElementById('div-nama-individu');
         const divPasukan = document.getElementById('div-nama-pasukan');
         const inputNama = document.getElementById('reg-nama');
+        const inputNoBadan = document.getElementById('reg-no-badan'); // BARU
         const inputPasukan = document.querySelectorAll('.nama-pasukan');
 
         if (acara === '4x100 meter') {
             divIndividu.style.display = 'none';
             inputNama.required = false;
+            if (inputNoBadan) inputNoBadan.required = false; // BARU: Matikan keperluan No. Badan
             divPasukan.style.display = 'grid';
             inputPasukan.forEach(input => input.required = true);
         } else {
-            divIndividu.style.display = 'block';
+            divIndividu.style.display = 'grid'; // Tukar kepada 'grid' kerana kini 2 lajur
             inputNama.required = true;
+            if (inputNoBadan) inputNoBadan.required = true; // BARU: Wajibkan No. Badan
             divPasukan.style.display = 'none';
             inputPasukan.forEach(input => input.required = false);
         }
@@ -334,7 +346,19 @@
              return;
         }
 
-        const dataPeserta = { acara, kategori, jantina, rumah, peserta, id: firebaseKey };
+let noBadan = '';
+        if (acara !== '4x100 meter') {
+            const inputNoBadan = document.getElementById('reg-no-badan');
+            noBadan = inputNoBadan.value.trim().toUpperCase();
+
+            // Semak duplikasi Nombor Badan (sekadar contoh asas)
+            if (pendaftaran.some(p => p.noBadan === noBadan)) {
+                alert(`Nombor Badan ${noBadan} telah digunakan. Sila gunakan nombor lain.`);
+                return;
+            }
+        }
+        
+        const dataPeserta = { acara, kategori, jantina, rumah, peserta, noBadan, id: firebaseKey }; // Ditambah 'noBadan'
         
         dbRefPendaftaran.child(firebaseKey).set(dataPeserta)
             .then(() => {
@@ -356,8 +380,10 @@
             row.insertCell().textContent = p.acara;
             row.insertCell().textContent = p.kategori;
             row.insertCell().textContent = p.jantina;
-            row.insertCell().textContent = p.rumah;
+row.insertCell().textContent = p.rumah;
             row.insertCell().textContent = p.peserta;
+            // Tambah Nombor Badan
+            row.insertCell().textContent = p.noBadan || '-'; // Paparkan '-' jika tiada no. badan (cth: 4x100m)
         });
     }
 
@@ -617,3 +643,4 @@
 
 </body>
 </html>
+
