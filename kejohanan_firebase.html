@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Kejohanan Olahraga SK Abang Gesa 2025 (Firebase)</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <style>
+        /* Gaya Asas */
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h1, h2 { color: #004d40; text-align: center; }
+        nav { background-color: #00796b; padding: 10px 0; border-radius: 6px 6px 0 0; }
+        nav button { background: none; border: none; color: white; padding: 10px 20px; margin: 0 5px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; border-radius: 4px; }
+        nav button:hover, nav button.active { background-color: #004d40; }
+        .page { display: none; padding: 20px 0; }
+        .page.active { display: block; }
+
+        /* Gaya Borang */
+        form, .data-entry { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; }
+        .data-entry { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        label { font-weight: bold; margin-bottom: 5px; display: block; color: #004d40; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button[type="submit"], .btn { background-color: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        button[type="submit"]:hover, .btn:hover { background-color: #004d40; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; font-size: 20px; font-weight: bold; color: #004d40; }
+
+        /* Gaya Jadual */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #e0f2f1; color: #004d40; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+
+        /* Gaya Analisis / Keputusan */
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .rumah-sukan-score { padding: 15px; border-radius: 6px; text-align: center; }
+        .merah { background-color: #ffebee; border: 2px solid #e53935; color: #e53935; }
+        .biru { background-color: #e3f2fd; border: 2px solid #2196f3; color: #2196f3; }
+        .kuning { background-color: #fffde7; border: 2px solid #ffeb3b; color: #ffc107; }
+        .score-title { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
+        .total-points { font-size: 2.5em; font-weight: bold; }
+        .event-card { border: 1px solid #00796b; border-radius: 6px; padding: 15px; margin-bottom: 10px; background-color: #f0fdfc; }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">Memuatkan Data...</div>
+
+<div class="container">
+    <h1>🏆 Kejohanan Olahraga Tahunan SK Abang Gesa 2025 (Firebase)</h1>
+    <nav>
+        <button onclick="showPage('daftar')" id="nav-daftar" class="active">📝 Daftar Acara</button>
+        <button onclick="showPage('jana')" id="nav-jana">🏃 Jana Acara & Lorong</button>
+        <button onclick="showPage('keputusan')" id="nav-keputusan">🥇 Keputusan & Markah</button>
+        <button onclick="showPage('analisis')" id="nav-analisis">📊 Analisis Keseluruhan</button>
+    </nav>
+
+    <div id="daftar" class="page active">
+        <h2>📝 Daftar Peserta</h2>
+        <form id="form-daftar-peserta">
+             <div><label for="reg-acara">Acara:</label><select id="reg-acara" required></select></div>
+            <div><label for="reg-kategori">Kategori (Tahun):</label><select id="reg-kategori" required><option value="Tahun 1">Tahun 1</option><option value="Tahun 2">Tahun 2</option><option value="Tahun 3">Tahun 3</option><option value="Tahun 4 dan 5">Tahun 4 dan 5</option><option value="Tahun 6">Tahun 6</option></select></div>
+            <div><label for="reg-jantina">Jantina:</label><select id="reg-jantina" required><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
+            <div><label for="reg-rumah">Rumah Sukan:</label><select id="reg-rumah" required><option value="Merah">Rumah Sukan Merah</option><option value="Biru">Rumah Sukan Biru</option><option value="Kuning">Rumah Sukan Kuning</option></select></div>
+            <div id="div-nama-individu" style="grid-column: 1 / -1;"><label for="reg-nama">Nama Peserta:</label><input type="text" id="reg-nama" placeholder="Nama Penuh Peserta" required></div>
+            <div id="div-nama-pasukan" style="display: none; grid-column: 1 / -1;">
+                <label>Nama 4 Peserta (4x100m):</label>
+                <input type="text" class="nama-pasukan" placeholder="Peserta 1" required>
+                <input type="text" class="nama-pasukan" placeholder="Peserta 2" required>
+                <input type="text" class="nama-pasukan" placeholder="Peserta 3" required>
+                <input type="text" class="nama-pasukan" placeholder="Peserta 4" required>
+            </div>
+            <button type="submit" style="grid-column: 1 / -1;">➕ Daftar Peserta</button>
+        </form>
+
+        <h3>Senarai Peserta Berdaftar</h3>
+        <table id="table-pendaftaran">
+            <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="jana" class="page">
+        <h2>🏃 Jana Acara & Lorong</h2>
+        <div class="data-entry">
+            <div><label for="jana-acara">Pilih Acara untuk Dijana:</label><select id="jana-acara"></select></div>
+            <div><label for="jana-kategori">Pilih Kategori:</label><select id="jana-kategori"><option value="Tahun 1">Tahun 1</option><option value="Tahun 2">Tahun 2</option><option value="Tahun 3">Tahun 3</option><option value="Tahun 4 dan 5">Tahun 4 dan 5</option><option value="Tahun 6">Tahun 6</option></select></div>
+            <div><label for="jana-jantina">Pilih Jantina:</label><select id="jana-jantina"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
+            <div><button onclick="janaAcara()">🚀 Jana Acara & Lorong</button></div>
+        </div>
+        
+        <h3 id="jana-tajuk"></h3>
+        <p id="jana-status"></p>
+        <table id="table-jana-acara" style="display: none;">
+            <thead><tr><th>Lorong/Giliran</th><th>Rumah Sukan</th><th>Peserta</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="keputusan" class="page">
+        <h2>🥇 Masukkan Keputusan & Mata</h2>
+        <div class="data-entry">
+            <div><label for="kep-acara">Pilih Acara:</label><select id="kep-acara"></select></div>
+            <div><label for="kep-kategori">Pilih Kategori:</label><select id="kep-kategori"><option value="Tahun 1">Tahun 1</option><option value="Tahun 2">Tahun 2</option><option value="Tahun 3">Tahun 3</option><option value="Tahun 4 dan 5">Tahun 4 dan 5</option><option value="Tahun 6">Tahun 6</option></select></div>
+            <div><label for="kep-jantina">Pilih Jantina:</label><select id="kep-jantina"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
+            <div><button onclick="paparPesertaKeputusan()">🔍 Muatkan Peserta</button></div>
+        </div>
+
+        <h3 id="kep-tajuk"></h3>
+        <form id="form-masuk-keputusan" style="display: none; grid-template-columns: 1fr;">
+            <table id="table-masuk-keputusan">
+                <thead><tr><th>Rumah Sukan</th><th>Peserta</th><th>Keputusan (<span id="unit-keputusan"></span>)</th><th>Kedudukan (1, 2, 3)</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <button type="submit">✅ Simpan Keputusan & Kira Mata</button>
+        </form>
+
+        <h3>Keputusan Disimpan</h3>
+        <table id="table-keputusan-disimpan">
+            <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (5 M)</th><th>Kedua (3 M)</th><th>Ketiga (1 M)</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="analisis" class="page">
+        <h2>📊 Analisis Keseluruhan Rumah Sukan</h2>
+        <div class="results-grid">
+            <div id="score-merah" class="rumah-sukan-score merah"><div class="score-title">Rumah Sukan Merah</div><div class="total-points">0</div></div>
+            <div id="score-biru" class="rumah-sukan-score biru"><div class="score-title">Rumah Sukan Biru</div><div class="total-points">0</div></div>
+            <div id="score-kuning" class="rumah-sukan-score kuning"><div class="score-title">Rumah Sukan Kuning</div><div class="total-points">0</div></div>
+        </div>
+        
+        <h3>Pecahan Markah Mengikut Acara</h3>
+        <div id="pecahan-markah"></div>
+    </div>
+</div>
+
+<script>
+    // ====================================================================
+    // I. KONFIGURASI FIREBASE (SILA GANTI DENGAN MAKLUMAT ANDA)
+    // ====================================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCqK3mYKfkHE4N67qFNpFqg1nrCzOtCJqo",
+        authDomain: "kot-sk-abang-gesa-2025.firebaseapp.com",
+        databaseURL: "https://kot-sk-abang-gesa-2025-default-rtdb.asia-southeast1.firebasedatabase.app", 
+        projectId: "kot-sk-abang-gesa-2025",
+        storageBucket: "kot-sk-abang-gesa-2025.firebasestorage.app",
+        messagingSenderId: "67901274927",
+        appId: "1:67901274927:web:198aba9aaae160e7623fda"
+    };
+
+    // Inisialisasi Firebase
+    if (firebaseConfig.apiKey.includes("GANTI_DENGAN_")) {
+        alert("⚠️ SILA GANTI KONFIGURASI FIREBASE di Bahagian I. Data tidak akan disimpan!");
+        document.getElementById('loading').textContent = "KESALAHAN: Sila masukkan konfigurasi Firebase.";
+        document.getElementById('loading').style.display = 'flex';
+    } else {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    
+    // Rujukan kepada nod data utama
+    const dbRefPendaftaran = db.ref('pendaftaran');
+    const dbRefAcaraDijana = db.ref('acaraDijana');
+    const dbRefKeputusan = db.ref('keputusan');
+    
+    // --- Data Model Lokal (Untuk Cache) ---
+    let pendaftaran = [];
+    let acaraDijana = {}; 
+    let keputusan = [];
+
+    // ====================================================================
+    // II. DATA DAN UTILITIES
+    // ====================================================================
+    const ACARA_INDIVIDU = ["100 meter", "200 meter", "Lompat Jauh", "Lompat Tinggi", "Lontar Peluru"];
+    const ACARA_BERPASUKAN = ["4x100 meter"];
+    const ACARA_SEMUA = [...ACARA_INDIVIDU, ...ACARA_BERPASUKAN];
+    const KATEGORI = ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4 dan 5", "Tahun 6"];
+    const LORONG = { "100 meter": 6, "200 meter": 3, "4x100 meter": 3 };
+    const MATA = { "1": 5, "2": 3, "3": 1 };
+
+    function showLoading() { document.getElementById('loading').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+    function isAcaraPadang(acara) { return ["Lompat Jauh", "Lompat Tinggi", "Lontar Peluru"].includes(acara); }
+    function isAcaraAvailable(acara, kategori) {
+        if (["Tahun 1", "Tahun 2", "Tahun 3"].includes(kategori)) { return ["100 meter", "4x100 meter"].includes(acara); }
+        return true; 
+    }
+    function getUniqueKey(acara, kategori, jantina) { 
+        return acara.replace(/\s/g, '_') + '|' + kategori.replace(/\s/g, '_') + '|' + jantina; 
+    }
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // ====================================================================
+    // III. FIREBASE LISTENERS (MUAT DATA REAL-TIME)
+    // ====================================================================
+
+    // Pendaftaran Listener
+    dbRefPendaftaran.on('value', (snapshot) => {
+        showLoading();
+        const data = snapshot.val();
+        pendaftaran = [];
+        if (data) {
+            Object.keys(data).forEach(key => pendaftaran.push(data[key]));
+        }
+        paparkanPendaftaran();
+        hideLoading();
+    });
+
+    // Acara Dijana Listener
+    dbRefAcaraDijana.on('value', (snapshot) => {
+        acaraDijana = snapshot.val() || {};
+    });
+
+    // Keputusan Listener
+    dbRefKeputusan.on('value', (snapshot) => {
+        showLoading();
+        const data = snapshot.val();
+        keputusan = [];
+        if (data) {
+            Object.keys(data).forEach(key => keputusan.push(data[key]));
+        }
+        paparkanKeputusanDisimpan();
+        // Hanya kira analisis jika pengguna berada di halaman Analisis
+        if (document.getElementById('analisis').classList.contains('active')) {
+             kiraAnalisis();
+        }
+        hideLoading();
+    });
+
+    // ====================================================================
+    // IV. PENGURUSAN UI DAN APLIKASI
+    // ====================================================================
+    
+    // ... (Fungsi showPage, muatkanAcaraPilihan, toggleNamaInput sama seperti sebelumnya)
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`nav-${pageId}`).classList.add('active');
+
+        if (pageId === 'analisis') {
+            kiraAnalisis();
+        } else if (pageId === 'daftar' || pageId === 'jana' || pageId === 'keputusan') {
+            muatkanAcaraPilihan();
+        }
+    }
+
+    function muatkanAcaraPilihan() {
+        const selects = ['reg-acara', 'jana-acara', 'kep-acara'];
+        selects.forEach(selectId => {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement) return;
+
+            const selectedKategori = document.getElementById('reg-kategori') ? document.getElementById('reg-kategori').value : 'Tahun 6';
+            const currentValue = selectElement.value;
+            selectElement.innerHTML = '';
+            
+            let firstAcara = '';
+            ACARA_SEMUA.forEach(acara => {
+                if (isAcaraAvailable(acara, selectedKategori)) {
+                    const option = document.createElement('option');
+                    option.value = acara;
+                    option.textContent = acara;
+                    selectElement.appendChild(option);
+                    if (!firstAcara) firstAcara = acara;
+                }
+            });
+            
+            if (selectId === 'reg-acara') {
+                selectElement.onchange = toggleNamaInput;
+                toggleNamaInput();
+            }
+
+            if ([...selectElement.options].some(opt => opt.value === currentValue)) {
+                selectElement.value = currentValue;
+            } else {
+                selectElement.value = firstAcara;
+            }
+        });
+    }
+
+    function toggleNamaInput() {
+        const acara = document.getElementById('reg-acara').value;
+        const divIndividu = document.getElementById('div-nama-individu');
+        const divPasukan = document.getElementById('div-nama-pasukan');
+        const inputNama = document.getElementById('reg-nama');
+        const inputPasukan = document.querySelectorAll('.nama-pasukan');
+
+        if (acara === '4x100 meter') {
+            divIndividu.style.display = 'none';
+            inputNama.required = false;
+            divPasukan.style.display = 'grid';
+            inputPasukan.forEach(input => input.required = true);
+        } else {
+            divIndividu.style.display = 'block';
+            inputNama.required = true;
+            divPasukan.style.display = 'none';
+            inputPasukan.forEach(input => input.required = false);
+        }
+    }
+
+    document.getElementById('reg-kategori').onchange = muatkanAcaraPilihan;
+
+    // --- Halaman Daftar Acara (Firebase Write) ---
+    document.getElementById('form-daftar-peserta').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const acara = document.getElementById('reg-acara').value;
+        const kategori = document.getElementById('reg-kategori').value;
+        const jantina = document.getElementById('reg-jantina').value;
+        const rumah = document.getElementById('reg-rumah').value;
+        let peserta;
+        const firebaseKey = dbRefPendaftaran.push().key; 
+
+        if (acara === '4x100 meter') {
+            const namaPasukan = Array.from(document.querySelectorAll('.nama-pasukan')).map(input => input.value.trim()).filter(n => n);
+            if (namaPasukan.length !== 4) { alert('Sila masukkan nama 4 peserta untuk 4x100 meter.'); return; }
+            peserta = namaPasukan.join(', ');
+        } else {
+            peserta = document.getElementById('reg-nama').value.trim();
+        }
+        
+        // Semak duplikasi 4x100m
+        if (acara === '4x100 meter' && pendaftaran.some(p => p.acara === acara && p.kategori === kategori && p.jantina === jantina && p.rumah === rumah)) {
+             alert(`Rumah Sukan ${rumah} sudah didaftarkan untuk ${acara} ${kategori} ${jantina}.`);
+             return;
+        }
+
+        const dataPeserta = { acara, kategori, jantina, rumah, peserta, id: firebaseKey };
+        
+        dbRefPendaftaran.child(firebaseKey).set(dataPeserta)
+            .then(() => {
+                alert('Peserta berjaya didaftar dan disimpan ke Firebase!');
+                e.target.reset();
+                muatkanAcaraPilihan(); 
+            })
+            .catch(error => {
+                console.error("Ralat pendaftaran:", error);
+                alert('Gagal mendaftar. Lihat konsol untuk ralat.');
+            });
+    });
+
+    function paparkanPendaftaran() {
+        const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        pendaftaran.forEach(p => {
+            const row = tbody.insertRow();
+            row.insertCell().textContent = p.acara;
+            row.insertCell().textContent = p.kategori;
+            row.insertCell().textContent = p.jantina;
+            row.insertCell().textContent = p.rumah;
+            row.insertCell().textContent = p.peserta;
+        });
+    }
+
+    // --- Halaman Jana Acara (Firebase Write) ---
+    function janaAcara() {
+        const acara = document.getElementById('jana-acara').value;
+        const kategori = document.getElementById('jana-kategori').value;
+        const jantina = document.getElementById('jana-jantina').value;
+        const key = getUniqueKey(acara, kategori, jantina);
+
+        if (!isAcaraAvailable(acara, kategori)) {
+            document.getElementById('jana-status').textContent = `⚠️ Acara ${acara} tidak ditawarkan untuk ${kategori}.`;
+            document.getElementById('table-jana-acara').style.display = 'none';
+            document.getElementById('jana-tajuk').textContent = '';
+            return;
+        }
+
+        const pesertaAcara = pendaftaran.filter(p => p.acara === acara && p.kategori === kategori && p.jantina === jantina);
+        
+        document.getElementById('jana-tajuk').textContent = `${acara} ${kategori} ${jantina}`;
+
+        if (pesertaAcara.length === 0) {
+            document.getElementById('jana-status').textContent = '❌ Tiada peserta didaftarkan untuk acara ini.';
+            document.getElementById('table-jana-acara').style.display = 'none';
+            return;
+        }
+
+        const isPadang = isAcaraPadang(acara);
+        let maxSlot = isPadang ? pesertaAcara.length : LORONG[acara];
+        
+        let slots = pesertaAcara.map((p, index) => ({ ...p, slot: isPadang ? (index + 1) : 0 }));
+        shuffleArray(slots);
+
+        if (!isPadang) {
+            slots = slots.slice(0, maxSlot);
+            slots.forEach((p, index) => p.slot = index + 1);
+            shuffleArray(slots); 
+        } else {
+             slots.forEach((p, index) => p.slot = index + 1);
+        }
+
+        // Simpan ke Firebase
+        dbRefAcaraDijana.child(key).set(slots)
+            .then(() => {
+                 document.getElementById('jana-status').textContent = `✅ ${slots.length} peserta telah dijana untuk lorong/giliran dan disimpan ke Firebase.`;
+                 paparkanJanaAcara(slots);
+            })
+             .catch(error => {
+                console.error("Ralat Jana Acara:", error);
+                alert('Gagal menjana acara. Lihat konsol untuk ralat.');
+            });
+    }
+    
+    function paparkanJanaAcara(slots) {
+        const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        slots.sort((a, b) => a.slot - b.slot).forEach(p => {
+            const row = tbody.insertRow();
+            row.insertCell().textContent = p.slot;
+            row.insertCell().textContent = p.rumah;
+            row.insertCell().textContent = p.peserta;
+        });
+        document.getElementById('table-jana-acara').style.display = 'table';
+    }
+
+    // --- Halaman Keputusan (Firebase Read) ---
+    async function paparPesertaKeputusan() {
+        const acara = document.getElementById('kep-acara').value;
+        const kategori = document.getElementById('kep-kategori').value;
+        const jantina = document.getElementById('kep-jantina').value;
+        const key = getUniqueKey(acara, kategori, jantina);
+
+        if (!isAcaraAvailable(acara, kategori)) {
+             alert(`Acara ${acara} tidak ditawarkan untuk ${kategori}.`);
+             document.getElementById('form-masuk-keputusan').style.display = 'none';
+             document.getElementById('kep-tajuk').textContent = '';
+             return;
+        }
+
+        const pesertaDijana = acaraDijana[key];
+        document.getElementById('kep-tajuk').textContent = `Input Keputusan: ${acara} ${kategori} ${jantina}`;
+        document.getElementById('form-masuk-keputusan').style.display = 'none';
+        
+        if (!pesertaDijana || pesertaDijana.length === 0) {
+            alert('Sila Jana Acara & Lorong di Halaman "Jana Acara & Lorong" dahulu.');
+            return;
+        }
+
+        const unit = isAcaraPadang(acara) ? 'meter (m)' : 'saat (s)';
+        document.getElementById('unit-keputusan').textContent = unit;
+
+        const tbody = document.getElementById('table-masuk-keputusan').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        
+        pesertaDijana.sort((a, b) => a.slot - b.slot).forEach((p, index) => {
+            const row = tbody.insertRow();
+            row.dataset.key = key;
+            row.dataset.rumah = p.rumah;
+            row.dataset.id = p.id; // Untuk rujukan
+            row.insertCell().textContent = p.rumah;
+            row.insertCell().textContent = p.peserta;
+            
+            const cellKeputusan = row.insertCell();
+            const inputKeputusan = document.createElement('input');
+            inputKeputusan.type = 'number';
+            inputKeputusan.step = 'any';
+            inputKeputusan.name = `keputusan-${index}`;
+            inputKeputusan.required = true;
+            cellKeputusan.appendChild(inputKeputusan);
+            
+            const cellKedudukan = row.insertCell();
+            const inputKedudukan = document.createElement('select');
+            inputKedudukan.name = `kedudukan-${index}`;
+            inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (Emas)</option><option value="2">2 (Perak)</option><option value="3">3 (Gangsa)</option>';
+            cellKedudukan.appendChild(inputKedudukan);
+
+            // Muatkan data keputusan sedia ada (jika ada)
+            const resultExisting = keputusan.find(k => k.key === key);
+            if (resultExisting) {
+                const pesertaResult = resultExisting.results.find(r => r.id === p.id);
+                if (pesertaResult) {
+                    inputKeputusan.value = pesertaResult.keputusan;
+                    inputKedudukan.value = pesertaResult.kedudukan.toString();
+                }
+            }
+        });
+
+        document.getElementById('form-masuk-keputusan').style.display = 'block';
+    }
+
+    // --- Halaman Keputusan (Firebase Write) ---
+    document.getElementById('form-masuk-keputusan').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const tbody = document.getElementById('table-masuk-keputusan').getElementsByTagName('tbody')[0];
+        const rows = Array.from(tbody.rows);
+        const key = rows[0].dataset.key;
+        const [acara, kategori, jantina] = key.split('|').map(s => s.replace(/_/g, ' ')); 
+
+        let results = [];
+        let kedudukanUsed = [];
+        
+        rows.forEach((row, index) => {
+            const keputusanVal = parseFloat(row.querySelector(`input[name="keputusan-${index}"]`).value);
+            const kedudukanVal = row.querySelector(`select[name="kedudukan-${index}"]`).value;
+            const rumah = row.dataset.rumah;
+            const peserta = row.cells[1].textContent;
+            const id = row.dataset.id; // ID unik peserta
+
+            if (kedudukanVal) {
+                if (kedudukanUsed.includes(kedudukanVal)) {
+                    alert(`Kedudukan ${kedudukanVal} telah diberikan lebih daripada sekali. Sila betulkan.`);
+                    e.preventDefault();
+                    return;
+                }
+                kedudukanUsed.push(kedudukanVal);
+            }
+
+            results.push({
+                id, rumah, peserta, keputusan: keputusanVal,
+                kedudukan: kedudukanVal ? parseInt(kedudukanVal) : 0,
+                mata: kedudukanVal ? MATA[kedudukanVal] : 0,
+            });
+        });
+
+        // Simpan ke Firebase
+        const resultData = {
+            key, acara, kategori, jantina,
+            results: results.sort((a, b) => a.kedudukan - b.kedudukan)
+        };
+        
+        dbRefKeputusan.child(key).set(resultData)
+            .then(() => {
+                alert('Keputusan dan mata telah dikira dan disimpan ke Firebase!');
+                document.getElementById('form-masuk-keputusan').style.display = 'none';
+                document.getElementById('kep-tajuk').textContent = '';
+            })
+            .catch(error => {
+                console.error("Ralat Simpan Keputusan:", error);
+                alert('Gagal menyimpan keputusan. Lihat konsol untuk ralat.');
+            });
+    });
+
+    function paparkanKeputusanDisimpan() {
+        const tbody = document.getElementById('table-keputusan-disimpan').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        
+        keputusan.forEach(k => {
+            const row = tbody.insertRow();
+            row.insertCell().textContent = k.acara;
+            row.insertCell().textContent = k.kategori;
+            row.insertCell().textContent = k.jantina;
+            
+            const juara = k.results.find(r => r.kedudukan === 1);
+            const kedua = k.results.find(r => r.kedudukan === 2);
+            const ketiga = k.results.find(r => r.kedudukan === 3);
+
+            row.insertCell().textContent = juara ? `${juara.rumah} (${juara.peserta.substring(0, 10)}...)` : '-';
+            row.insertCell().textContent = kedua ? `${kedua.rumah} (${kedua.peserta.substring(0, 10)}...)` : '-';
+            row.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketiga.peserta.substring(0, 10)}...)` : '-';
+        });
+    }
+
+    // --- Halaman Analisis (Firebase Read) ---
+    function kiraAnalisis() {
+        let markahRumah = { "Merah": 0, "Biru": 0, "Kuning": 0 };
+        let pecahanAcara = {}; 
+
+        keputusan.forEach(k => {
+            const key = k.key;
+            pecahanAcara[key] = {
+                Merah: 0, Biru: 0, Kuning: 0,
+                acara: k.acara, kategori: k.kategori, jantina: k.jantina
+            };
+
+            k.results.forEach(r => {
+                if (r.kedudukan >= 1 && r.kedudukan <= 3) {
+                    markahRumah[r.rumah] += r.mata;
+                    pecahanAcara[key][r.rumah] += r.mata;
+                }
+            });
+        });
+
+        document.getElementById('score-merah').querySelector('.total-points').textContent = markahRumah.Merah;
+        document.getElementById('score-biru').querySelector('.total-points').textContent = markahRumah.Biru;
+        document.getElementById('score-kuning').querySelector('.total-points').textContent = markahRumah.Kuning;
+
+        const pecahanDiv = document.getElementById('pecahan-markah');
+        pecahanDiv.innerHTML = '';
+
+        // Tapis dan susun acara mengikut nama
+        const keysSorted = Object.keys(pecahanAcara).sort();
+
+        keysSorted.forEach(key => {
+            const data = pecahanAcara[key];
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-card';
+            eventDiv.innerHTML = `
+                <h4>${data.acara} - ${data.kategori} ${data.jantina}</h4>
+                <p>
+                    <span class="merah" style="padding: 2px 5px; border-radius: 3px;">Merah: <b>${data.Merah}</b> mata</span> |
+                    <span class="biru" style="padding: 2px 5px; border-radius: 3px;">Biru: <b>${data.Biru}</b> mata</span> |
+                    <span class="kuning" style="padding: 2px 5px; border-radius: 3px;">Kuning: <b>${data.Kuning}</b> mata</span>
+                </p>
+            `;
+            pecahanDiv.appendChild(eventDiv);
+        });
+    }
+
+    // --- Inisialisasi Aplikasi ---
+    document.addEventListener('DOMContentLoaded', () => {
+        muatkanAcaraPilihan();
+        hideLoading();
+    });
+
+</script>
+
+</body>
+</html>
