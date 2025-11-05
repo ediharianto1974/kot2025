@@ -226,15 +226,10 @@
     // II. DATA DAN UTILITIES
     // ====================================================================
     
-    // DIUBAH: Tambah 100 Meter Berpagar
     const ACARA_INDIVIDU = ["100 meter", "200 meter", "100 Meter Berpagar", "Lompat Jauh", "Lompat Tinggi", "Lontar Peluru"]; 
     const ACARA_BERPASUKAN = ["4x100 meter"];
     const ACARA_SEMUA = [...ACARA_INDIVIDU, ...ACARA_BERPASUKAN];
-    
-    // DIUBAH: Memisahkan Tahun 4 dan Tahun 5
     const KATEGORI = ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6"]; 
-    
-    // DIUBAH: Tambah Lorong untuk 100 Meter Berpagar
     const LORONG = { "100 meter": 6, "200 meter": 3, "4x100 meter": 3, "100 Meter Berpagar": 6 };
     const MATA = { "1": 5, "2": 3, "3": 1 };
 
@@ -242,24 +237,20 @@
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
     function isAcaraPadang(acara) { return ["Lompat Jauh", "Lompat Tinggi", "Lontar Peluru"].includes(acara); }
     
-    // DIUBAH: Logik baru untuk Acara Available
     function isAcaraAvailable(acara, kategori) {
         const tahun1_3 = ["Tahun 1", "Tahun 2", "Tahun 3"];
         const tahun4_6 = ["Tahun 4", "Tahun 5", "Tahun 6"];
         
         if (tahun1_3.includes(kategori)) { 
-            // Tahun 1, 2, 3 hanya 100m & 4x100m
             if (!["100 meter", "4x100 meter"].includes(acara)) {
                 return false;
             }
         }
         
-        // Sekat 100 Meter Berpagar hanya untuk Tahun 4, 5, 6
         if (acara === "100 Meter Berpagar") {
             return tahun4_6.includes(kategori);
         }
         
-        // Acara lain (200m, padang) tersedia untuk Tahun 4, 5, 6.
         return true; 
     }
     
@@ -273,7 +264,6 @@
         }
     }
 
-    // Fungsi untuk menukar input ke huruf besar
     const toUpperCase = (event) => {
         event.target.value = event.target.value.toUpperCase();
     };
@@ -282,7 +272,7 @@
     // III. FIREBASE LISTENERS (MUAT DATA REAL-TIME)
     // ====================================================================
 
-    // Pendaftaran Listener
+    // Pendaftaran Listener (Fungsi ini dipanggil automatik apabila data berubah)
     dbRefPendaftaran.on('value', (snapshot) => {
         showLoading();
         const data = snapshot.val();
@@ -390,7 +380,7 @@
             });
     });
 
-// --- Semak Status Auth Semasa Muat Halaman (Wajib) ---
+    // --- Semak Status Auth Semasa Muat Halaman (Wajib) ---
     dbAuth.onAuthStateChanged((user) => {
         if (user) {
             isAdmin = true;
@@ -417,7 +407,7 @@
             if (!currentPage) {
                  showPage('daftar'); // Tunjukkan halaman daftar sebagai lalai
             }
-            // PENTING: Panggil semula paparkanPendaftaran() untuk membuang butang Padam
+            // PENTING: Panggil semula paparkanPendaftaran() untuk membuang butang Padam (tukar kepada N/A)
             paparkanPendaftaran(); 
         }
         hideLoading();
@@ -462,7 +452,6 @@
                 if (firstAcara) toggleNamaInput();
             }
 
-            // Cuba kekalkan nilai sebelumnya atau tetapkan kepada acara pertama yang sah
             if ([...selectElement.options].some(opt => opt.value === currentValue)) {
                 selectElement.value = currentValue;
             } else {
@@ -479,7 +468,6 @@
         const inputNoBadan = document.getElementById('reg-no-badan'); 
         const inputPasukan = document.querySelectorAll('.nama-pasukan');
         
-        // Pastikan input nama/no badan sentiasa uppercase
         if (inputNama) inputNama.addEventListener('input', toUpperCase);
         if (inputNoBadan) inputNoBadan.addEventListener('input', toUpperCase);
         inputPasukan.forEach(input => input.addEventListener('input', toUpperCase));
@@ -533,7 +521,6 @@
             const inputNoBadan = document.getElementById('reg-no-badan');
             noBadan = inputNoBadan.value.trim().toUpperCase(); 
 
-            // Semak duplikasi Nombor Badan (Semak dalam Kategori yang sama untuk ketepatan)
             if (pendaftaran.some(p => p.noBadan === noBadan && p.noBadan !== '' && p.kategori === kategori)) { 
                 alert(`Nombor Badan ${noBadan} telah digunakan dalam kategori ${kategori}. Sila gunakan nombor lain.`);
                 return;
@@ -542,19 +529,24 @@
         
         const dataPeserta = { acara, kategori, jantina, rumah, peserta, noBadan, id: firebaseKey }; 
         
+        showLoading(); // MULA SHOW LOADING SEBELUM WRITE DATA
+        
         dbRefPendaftaran.child(firebaseKey).set(dataPeserta)
             .then(() => {
                 alert('Peserta berjaya didaftar dan disimpan ke Firebase!');
                 e.target.reset();
-                muatkanAcaraPilihan(); 
+                // KEMASKINI: Keluarkan panggilan muatkanAcaraPilihan() di sini. 
+                // Firebase listener akan menguruskan pemaparan senarai.
+                hideLoading(); // Sembunyikan loading
             })
             .catch(error => {
                 console.error("Ralat pendaftaran:", error);
                 alert('Gagal mendaftar. Lihat konsol untuk ralat.');
+                hideLoading(); // Pastikan loading hilang jika ada ralat
             });
     });
 
-function paparkanPendaftaran() {
+    function paparkanPendaftaran() {
         const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         pendaftaran.forEach(p => {
@@ -567,9 +559,7 @@ function paparkanPendaftaran() {
             row.insertCell().textContent = p.noBadan || '-'; 
 
             const cellTindakan = row.insertCell();
-            
-            // LOGIK DIPERBAIKI UNTUK MEMASTIKAN ISADMIN DIGUNAKAN
-            if (isAdmin) { 
+            if (isAdmin) {
                 const btnPadam = document.createElement('button');
                 btnPadam.textContent = '❌ Padam';
                 btnPadam.className = 'btn'; 
@@ -656,7 +646,9 @@ function paparkanPendaftaran() {
         const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         slots.sort((a, b) => a.slot - b.slot).forEach(p => {
-            const row = tbody.insertCell();
+            // Ralat yang dikenal pasti: anda menggunakan row = tbody.insertCell() bukannya row = tbody.insertRow().
+            // Saya telah betulkannya di bawah:
+            const row = tbody.insertRow();
             row.insertCell().textContent = p.slot;
             row.insertCell().textContent = p.rumah;
             row.insertCell().textContent = p.peserta;
@@ -854,4 +846,3 @@ function paparkanPendaftaran() {
 
 </body>
 </html>
-
