@@ -168,7 +168,7 @@
 
         <h3>Keputusan Disimpan</h3>
         <table id="table-keputusan-disimpan">
-            <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (5 M)</th><th>Kedua (3 M)</th><th>Ketiga (1 M)</th></tr></thead>
+            <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (6 M)</th><th>Kedua (4 M)</th><th>Ketiga (3 M)</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -813,7 +813,7 @@
             };
 
             k.results.forEach(r => {
-                if (r.kedudukan >= 1 && r.kedudukan <= 3) {
+                if (r.kedudukan >= 1 && r.kedudukan <= 6) { // UBAH HAD KEPADA 6
                     markahRumah[r.rumah] += r.mata;
                     pecahanAcara[key][r.rumah] += r.mata;
                 }
@@ -854,4 +854,5 @@
 
 </body>
 </html>
+
 
