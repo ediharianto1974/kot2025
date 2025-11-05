@@ -50,14 +50,49 @@
         .total-points { font-size: 2.5em; font-weight: bold; }
         .event-card { border: 1px solid #00796b; border-radius: 6px; padding: 15px; margin-bottom: 10px; background-color: #f0fdfc; }
         
-        /* Gaya Cetak (Sembunyikan kawalan semasa mencetak) */
+        /* START: PENAMBAHBAIKAN MEDIA PRINT */
         @media print {
-            .container { box-shadow: none; border: none; }
-            nav, #form-daftar-peserta, .filter-group, .data-entry, button, .btn, .btn-print, #kep-tajuk, .loading-overlay { display: none !important; }
-            h1 { page-break-after: always; }
-            h2, h3 { page-break-before: always; }
-            table { margin-top: 0; }
+            /* Sembunyikan semua kawalan/navigasi secara total */
+            nav, #form-daftar-peserta, .filter-group, .data-entry, 
+            button, .btn, .btn-print, #kep-tajuk, .loading-overlay, 
+            #login, #form-login { 
+                display: none !important; 
+            }
+            
+            /* Pastikan kontena tidak mempunyai bayang */
+            .container { box-shadow: none !important; border: none !important; }
+            
+            /* Tunjukkan hanya halaman yang aktif */
+            .page:not(.active) { display: none !important; }
+            .page.active { display: block !important; }
+
+            /* Pastikan jadual dan tajuk tidak tersebar */
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            
+            /* Paksa pecahan halaman sebelum setiap tajuk laporan utama */
+            .page h2 { 
+                 page-break-before: always;
+                 margin-top: 0;
+            }
+            
+            /* Kawalan spesifik: Jana Acara & Lorong */
+            #jana h2 { page-break-before: auto !important; } /* Jangan paksa page break untuk tajuk pertama */
+            #jana-tajuk { page-break-before: auto !important; } /* Pastikan tajuk acara cetak bersama jadual */
+
+            /* Kawalan spesifik: Keputusan & Markah */
+            #keputusan h3:first-of-type { display: none !important; } /* Sembunyikan 'Keputusan Disimpan' jika hanya mahu cetak jadual di bawah */
+            #table-keputusan-disimpan { margin-top: 0; }
+            
+            /* Kawalan spesifik: Analisis Keseluruhan */
+            #analisis h3 { page-break-before: auto !important; }
+            .results-grid { page-break-after: avoid; }
+            
+            /* Sembunyikan elemen borang input/select/button dalam semua keadaan */
+            input, select, textarea { display: none !important; }
         }
+        /* END: PENAMBAHBAIKAN MEDIA PRINT */
     </style>
 </head>
 <body>
@@ -791,7 +826,7 @@
             const cellKedudukan = row.insertCell();
             const inputKedudukan = document.createElement('select');
             inputKedudukan.name = `kedudukan-${index}`;
-            // Pilihan Kedudukan Baru (6 tempat)
+            // Pilihan Kedudukan
             inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (6 M)</option><option value="2">2 (4 M)</option><option value="3">3 (3 M)</option><option value="4">4 (1 M)</option><option value="5">5 (1 M)</option><option value="6">6 (1 M)</option>';
             cellKedudukan.appendChild(inputKedudukan);
 
@@ -876,18 +911,29 @@
 
             row.insertCell().textContent = juara ? `${juara.rumah} (${juara.peserta.substring(0, 10)}...)` : '-';
             row.insertCell().textContent = kedua ? `${kedua.rumah} (${kedua.peserta.substring(0, 10)}...)` : '-';
-            row.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketiga.peserta.substring(0, 10)}...)` : '-';
+            row.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketingga.peserta.substring(0, 10)}...)` : '-';
         });
     }
 
     // --- Fungsi Cetak Keputusan Disimpan (Halaman Keputusan) ---
     function cetakKeputusanDisimpan() {
         // Hanya cetak jadual keputusan disimpan, sembunyikan input borang.
-        const originalDisplay = document.getElementById('form-masuk-keputusan').style.display;
-        document.getElementById('form-masuk-keputusan').style.display = 'none';
+        const form = document.getElementById('form-masuk-keputusan');
+        const originalDisplay = form.style.display;
+        form.style.display = 'none';
+
+        // Pindahkan kelas aktif ke elemen yang ingin dicetak sahaja (halaman keputusan)
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.getElementById('keputusan').classList.add('active');
+
         window.print();
-        document.getElementById('form-masuk-keputusan').style.display = originalDisplay; 
+        
+        // Kembalikan paparan asal dan kelas aktif asal
+        form.style.display = originalDisplay; 
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.getElementById(document.querySelector('nav button.active').id.replace('nav-', '')).classList.add('active');
     }
+
 
     function kiraAnalisis() {
         let markahRumah = { "Merah": 0, "Biru": 0, "Kuning": 0 };
@@ -936,8 +982,29 @@
 
     // --- Inisialisasi Aplikasi ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Muatkan Acara untuk filter pada mulanya
         muatkanAcaraPilihan(); 
+        
+        // Perbaiki fungsi cetak untuk Analisis agar hanya cetak halaman Analisis sahaja
+        document.getElementById('analisis').querySelector('.btn-print').onclick = function() {
+            // Pindahkan kelas aktif ke elemen yang ingin dicetak sahaja (halaman analisis)
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('analisis').classList.add('active');
+            window.print();
+            // Kembalikan kelas aktif asal
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('analisis').classList.add('active'); // Kekalkan di analisis jika butang ini ditekan dari analisis
+        };
+        
+        // Perbaiki fungsi cetak untuk Jana Acara agar hanya cetak halaman Jana Acara sahaja
+        document.getElementById('jana').querySelector('#btn-print-jana').onclick = function() {
+            // Pindahkan kelas aktif ke elemen yang ingin dicetak sahaja (halaman jana)
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('jana').classList.add('active');
+            window.print();
+            // Kembalikan kelas aktif asal
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('jana').classList.add('active'); // Kekalkan di jana jika butang ini ditekan dari jana
+        };
     });
 
 </script>
