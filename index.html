@@ -703,11 +703,34 @@
             });
     });
 
-    function paparkanPendaftaran() {
+function paparkanPendaftaran() {
         const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         
-        pendaftaran.forEach(p => {
+        // PENGUBAHSUAIAN: Susun senarai pendaftaran mengikut Kategori > Jantina > Rumah Sukan > Nama Peserta
+        const pendaftaranTersusun = [...pendaftaran].sort((a, b) => {
+            const kategoriA = KATEGORI.indexOf(a.kategori);
+            const kategoriB = KATEGORI.indexOf(b.kategori);
+            
+            // 1. Susun mengikut Kategori (Tahun)
+            if (kategoriA !== kategoriB) {
+                return kategoriA - kategoriB;
+            }
+
+            // 2. Susun mengikut Jantina
+            if (a.jantina < b.jantina) return -1;
+            if (a.jantina > b.jantina) return 1;
+
+            // 3. Susun mengikut Rumah Sukan (Alphabetical, contoh: Biru sebelum Merah)
+            if (a.rumah < b.rumah) return -1;
+            if (a.rumah > b.rumah) return 1;
+
+            // 4. Susun mengikut Nama Peserta
+            return a.peserta.localeCompare(b.peserta);
+        });
+
+
+        pendaftaranTersusun.forEach(p => {
             const row = tbody.insertRow();
             row.dataset.acara = p.acara.toLowerCase();
             row.dataset.kategori = p.kategori.toLowerCase();
@@ -1293,3 +1316,4 @@
 
 </body>
 </html>
+
