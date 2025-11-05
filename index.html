@@ -20,18 +20,13 @@
         .page { display: none; padding: 20px 0; }
         .page.active { display: block; }
 
-        /* Gaya Borang & Penapis */
+        /* Gaya Borang */
         form, .data-entry { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; }
         .data-entry { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-        .filter-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; border: 1px dashed #00796b; border-radius: 6px; margin-bottom: 20px;}
-
         label { font-weight: bold; margin-bottom: 5px; display: block; color: #004d40; }
         input[type="text"], input[type="number"], select, input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button[type="submit"], .btn, .btn-print { background-color: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        button[type="submit"], .btn { background-color: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
         button[type="submit"]:hover, .btn:hover { background-color: #004d40; }
-        .btn-print { background-color: #607d8b; margin-top: 10px; }
-        .btn-print:hover { background-color: #455a64; }
-
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; font-size: 20px; font-weight: bold; color: #004d40; }
 
         /* Gaya Jadual */
@@ -49,50 +44,6 @@
         .score-title { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
         .total-points { font-size: 2.5em; font-weight: bold; }
         .event-card { border: 1px solid #00796b; border-radius: 6px; padding: 15px; margin-bottom: 10px; background-color: #f0fdfc; }
-        
-        /* START: PENAMBAHBAIKAN MEDIA PRINT */
-        @media print {
-            /* Sembunyikan semua kawalan/navigasi secara total */
-            nav, #form-daftar-peserta, .filter-group, .data-entry, 
-            button, .btn, .btn-print, #kep-tajuk, .loading-overlay, 
-            #login, #form-login { 
-                display: none !important; 
-            }
-            
-            /* Pastikan kontena tidak mempunyai bayang */
-            .container { box-shadow: none !important; border: none !important; }
-            
-            /* Tunjukkan hanya halaman yang aktif */
-            .page:not(.active) { display: none !important; }
-            .page.active { display: block !important; }
-
-            /* Pastikan jadual dan tajuk tidak tersebar */
-            table { page-break-inside: auto; }
-            tr { page-break-inside: avoid; page-break-after: auto; }
-            thead { display: table-header-group; }
-            
-            /* Paksa pecahan halaman sebelum setiap tajuk laporan utama */
-            .page h2 { 
-                 page-break-before: always;
-                 margin-top: 0;
-            }
-            
-            /* Kawalan spesifik: Jana Acara & Lorong */
-            #jana h2 { page-break-before: auto !important; } /* Jangan paksa page break untuk tajuk pertama */
-            #jana-tajuk { page-break-before: auto !important; } /* Pastikan tajuk acara cetak bersama jadual */
-
-            /* Kawalan spesifik: Keputusan & Markah */
-            #keputusan h3:first-of-type { display: none !important; } /* Sembunyikan 'Keputusan Disimpan' jika hanya mahu cetak jadual di bawah */
-            #table-keputusan-disimpan { margin-top: 0; }
-            
-            /* Kawalan spesifik: Analisis Keseluruhan */
-            #analisis h3 { page-break-before: auto !important; }
-            .results-grid { page-break-after: avoid; }
-            
-            /* Sembunyikan elemen borang input/select/button dalam semua keadaan */
-            input, select, textarea { display: none !important; }
-        }
-        /* END: PENAMBAHBAIKAN MEDIA PRINT */
     </style>
 </head>
 <body>
@@ -100,7 +51,7 @@
 <div class="loading-overlay" id="loading">Memuatkan Data...</div>
 
 <div class="container">
-    <h1>🏆 Kejohanan Olahraga Tahunan SK Abang Gesa 2025</h1>
+    <h1>🏆 Kejohanan Olahraga Tahunan SK Abang Gesa 2025 (Firebase)</h1>
     <nav>
         <button onclick="showPage('daftar')" id="nav-daftar" class="active">📝 Daftar Acara</button>
         <button onclick="showPage('jana')" id="nav-jana">🏃 Jana Acara & Lorong</button>
@@ -160,31 +111,6 @@
         </form>
 
         <h3>Senarai Peserta Berdaftar</h3>
-        <div class="filter-group">
-            <div><label for="filter-kategori">Kategori:</label><select id="filter-kategori" onchange="paparkanPendaftaran(true)">
-                <option value="Semua">Semua</option>
-                <option value="Tahun 1">Tahun 1</option>
-                <option value="Tahun 2">Tahun 2</option>
-                <option value="Tahun 3">Tahun 3</option>
-                <option value="Tahun 4">Tahun 4</option>
-                <option value="Tahun 5">Tahun 5</option>
-                <option value="Tahun 6">Tahun 6</option>
-            </select></div>
-            <div><label for="filter-acara">Acara:</label><select id="filter-acara" onchange="paparkanPendaftaran(true)">
-                <option value="Semua">Semua</option>
-                </select></div>
-            <div><label for="filter-jantina">Jantina:</label><select id="filter-jantina" onchange="paparkanPendaftaran(true)">
-                <option value="Semua">Semua</option>
-                <option value="Lelaki">Lelaki</option>
-                <option value="Perempuan">Perempuan</option>
-            </select></div>
-            <div><label for="filter-rumah">Rumah Sukan:</label><select id="filter-rumah" onchange="paparkanPendaftaran(true)">
-                <option value="Semua">Semua</option>
-                <option value="Merah">Merah</option>
-                <option value="Biru">Biru</option>
-                <option value="Kuning">Kuning</option>
-            </select></div>
-        </div>
         <table id="table-pendaftaran">
 <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th><th>No. Badan</th><th>Tindakan</th></tr></thead>
             <tbody></tbody>
@@ -213,8 +139,7 @@
             <thead><tr><th>Lorong/Giliran</th><th>Rumah Sukan</th><th>Peserta</th></tr></thead>
             <tbody></tbody>
         </table>
-        <button class="btn-print" onclick="window.print()" style="display: none;" id="btn-print-jana">🖨️ Cetak Senarai Lorong</button>
-        </div>
+    </div>
 
     <div id="keputusan" class="page">
         <h2>🥇 Masukkan Keputusan & Mata</h2>
@@ -235,7 +160,7 @@
         <h3 id="kep-tajuk"></h3>
         <form id="form-masuk-keputusan" style="display: none; grid-template-columns: 1fr;">
             <table id="table-masuk-keputusan">
-                <thead><tr><th>Rumah Sukan</th><th>Peserta</th><th>Keputusan (<span id="unit-keputusan"></span>)</th><th>Kedudukan (1, 2, 3)</th></tr></thead>
+                <thead><tr><th>Rumah Sukan</th><th>Peserta</th><th>Keputusan (<span id="unit-keputusan"></span>)</th><th>Kedudukan (1 - 6)</th></tr></thead>
                 <tbody></tbody>
             </table>
             <button type="submit">✅ Simpan Keputusan & Kira Mata</button>
@@ -243,11 +168,10 @@
 
         <h3>Keputusan Disimpan</h3>
         <table id="table-keputusan-disimpan">
-            <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (6 M)</th><th>Kedua (4 M)</th><th>Ketiga (3 M)</th></tr></thead>
+             <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (6 M)</th><th>Kedua (4 M)</th><th>Ketiga (3 M)</th></tr></thead>
             <tbody></tbody>
         </table>
-        <button class="btn-print" onclick="cetakKeputusanDisimpan()">🖨️ Cetak Senarai Keputusan</button>
-        </div>
+    </div>
 
     <div id="analisis" class="page">
         <h2>📊 Analisis Keseluruhan Rumah Sukan</h2>
@@ -259,9 +183,7 @@
         
         <h3>Pecahan Markah Mengikut Acara</h3>
         <div id="pecahan-markah"></div>
-
-        <button class="btn-print" onclick="window.print()">🖨️ Cetak Laporan Analisis</button>
-        </div>
+    </div>
 </div>
 
 <script>
@@ -365,7 +287,7 @@
         if (data) {
             Object.keys(data).forEach(key => pendaftaran.push(data[key]));
         }
-        paparkanPendaftaran(false); // Papar semula senarai dengan filter semasa
+        paparkanPendaftaran();
     });
 
     // Acara Dijana Listener
@@ -477,7 +399,7 @@
             }
             
             // PENTING: Panggil semula paparkanPendaftaran() untuk memaparkan butang Padam
-            paparkanPendaftaran(false); 
+            paparkanPendaftaran(); 
 
         } else {
             isAdmin = false;
@@ -493,7 +415,7 @@
                  showPage('daftar'); // Tunjukkan halaman daftar sebagai lalai
             }
             // PENTING: Panggil semula paparkanPendaftaran() untuk membuang butang Padam (tukar kepada N/A)
-            paparkanPendaftaran(false); 
+            paparkanPendaftaran(); 
         }
         hideLoading();
     });
@@ -503,16 +425,13 @@
     // ====================================================================
 
     function muatkanAcaraPilihan() {
-        const selects = ['reg-acara', 'jana-acara', 'kep-acara', 'filter-acara'];
-        const uniqueAcara = ['Semua', ...ACARA_SEMUA];
-
+        const selects = ['reg-acara', 'jana-acara', 'kep-acara'];
         selects.forEach(selectId => {
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
             const currentValue = selectElement.value;
             
-            // Untuk borang pendaftaran/jana/keputusan, guna logik kategori untuk tapis acara
             let selectedKategori; 
             if (selectId.startsWith('reg')) {
                 selectedKategori = document.getElementById('reg-kategori').value;
@@ -525,21 +444,13 @@
             selectElement.innerHTML = '';
             
             let firstAcara = '';
-            uniqueAcara.forEach(acara => {
-                // Untuk penapis, tunjukkan semua acara
-                const isFilter = selectId === 'filter-acara';
-                if (isFilter || isAcaraAvailable(acara, selectedKategori)) {
-                    if (isFilter && acara === 'Semua') {
-                        // "Semua" hanya untuk filter, bukan borang pendaftaran
-                    } else if (!isFilter && acara === 'Semua') {
-                        return; 
-                    }
-                    
+            ACARA_SEMUA.forEach(acara => {
+                if (isAcaraAvailable(acara, selectedKategori)) {
                     const option = document.createElement('option');
                     option.value = acara;
                     option.textContent = acara;
                     selectElement.appendChild(option);
-                    if (!firstAcara && acara !== 'Semua') firstAcara = acara;
+                    if (!firstAcara) firstAcara = acara;
                 }
             });
             
@@ -550,8 +461,6 @@
 
             if ([...selectElement.options].some(opt => opt.value === currentValue)) {
                 selectElement.value = currentValue;
-            } else if (selectId.startsWith('filter')) {
-                selectElement.value = 'Semua';
             } else {
                 selectElement.value = firstAcara;
             }
@@ -633,6 +542,8 @@
             .then(() => {
                 alert('Peserta berjaya didaftar dan disimpan ke Firebase!');
                 e.target.reset();
+                // KEMASKINI: Keluarkan panggilan muatkanAcaraPilihan() di sini. 
+                // Firebase listener akan menguruskan pemaparan senarai.
                 hideLoading(); // Sembunyikan loading
             })
             .catch(error => {
@@ -642,31 +553,10 @@
             });
     });
 
-    // --- Papar Pendaftaran dengan Filter ---
-    function paparkanPendaftaran(isFilteredByUser) {
+    function paparkanPendaftaran() {
         const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
-
-        // Muat nilai filter
-        const filterKategori = document.getElementById('filter-kategori').value;
-        const filterAcara = document.getElementById('filter-acara').value;
-        const filterJantina = document.getElementById('filter-jantina').value;
-        const filterRumah = document.getElementById('filter-rumah').value;
-
-        // Populate Acara filter (hanya buat sekali semasa mula-mula)
-        if (!isFilteredByUser) {
-            muatkanAcaraPilihan();
-        }
-
-        const filteredPeserta = pendaftaran.filter(p => {
-            const matchKategori = filterKategori === 'Semua' || p.kategori === filterKategori;
-            const matchAcara = filterAcara === 'Semua' || p.acara === filterAcara;
-            const matchJantina = filterJantina === 'Semua' || p.jantina === filterJantina;
-            const matchRumah = filterRumah === 'Semua' || p.rumah === filterRumah;
-            return matchKategori && matchAcara && matchJantina && matchRumah;
-        });
-
-        filteredPeserta.forEach(p => {
+        pendaftaran.forEach(p => {
             const row = tbody.insertRow();
             row.insertCell().textContent = p.acara;
             row.insertCell().textContent = p.kategori;
@@ -689,7 +579,6 @@
                 cellTindakan.textContent = 'N/A';
             }
         });
-        hideLoading();
     }
 
     function padamPeserta(pesertaId, namaPeserta) {
@@ -718,23 +607,20 @@
         const kategori = document.getElementById('jana-kategori').value;
         const jantina = document.getElementById('jana-jantina').value;
         const key = getUniqueKey(acara, kategori, jantina);
-        const btnPrint = document.getElementById('btn-print-jana');
 
         if (!isAcaraAvailable(acara, kategori)) {
             document.getElementById('jana-status').textContent = `⚠️ Acara ${acara} tidak ditawarkan untuk ${kategori}.`;
             document.getElementById('table-jana-acara').style.display = 'none';
             document.getElementById('jana-tajuk').textContent = '';
-            btnPrint.style.display = 'none';
             return;
         }
 
         const pesertaAcara = pendaftaran.filter(p => p.acara === acara && p.kategori === kategori && p.jantina === jantina);
-        document.getElementById('jana-tajuk').textContent = `Senarai Lorong: ${acara} ${kategori} ${jantina}`;
+        document.getElementById('jana-tajuk').textContent = `${acara} ${kategori} ${jantina}`;
 
         if (pesertaAcara.length === 0) {
             document.getElementById('jana-status').textContent = '❌ Tiada peserta didaftarkan untuk acara ini.';
             document.getElementById('table-jana-acara').style.display = 'none';
-            btnPrint.style.display = 'none';
             return;
         }
 
@@ -756,12 +642,10 @@
             .then(() => {
                  document.getElementById('jana-status').textContent = `✅ ${slots.length} peserta telah dijana untuk lorong/giliran dan disimpan ke Firebase.`;
                  paparkanJanaAcara(slots);
-                 btnPrint.style.display = 'block'; // Tunjuk butang cetak selepas jana
             })
              .catch(error => {
                 console.error("Ralat Jana Acara:", error);
                 alert('Gagal menjana acara. Lihat konsol untuk ralat.');
-                btnPrint.style.display = 'none';
             });
     }
     
@@ -769,6 +653,8 @@
         const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         slots.sort((a, b) => a.slot - b.slot).forEach(p => {
+            // Ralat yang dikenal pasti: anda menggunakan row = tbody.insertCell() bukannya row = tbody.insertRow().
+            // Saya telah betulkannya di bawah:
             const row = tbody.insertRow();
             row.insertCell().textContent = p.slot;
             row.insertCell().textContent = p.rumah;
@@ -826,7 +712,7 @@
             const cellKedudukan = row.insertCell();
             const inputKedudukan = document.createElement('select');
             inputKedudukan.name = `kedudukan-${index}`;
-            // Pilihan Kedudukan
+            // Pilihan BARU, termasuk Kedudukan 4, 5, dan 6:
             inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (6 M)</option><option value="2">2 (4 M)</option><option value="3">3 (3 M)</option><option value="4">4 (1 M)</option><option value="5">5 (1 M)</option><option value="6">6 (1 M)</option>';
             cellKedudukan.appendChild(inputKedudukan);
 
@@ -911,29 +797,9 @@
 
             row.insertCell().textContent = juara ? `${juara.rumah} (${juara.peserta.substring(0, 10)}...)` : '-';
             row.insertCell().textContent = kedua ? `${kedua.rumah} (${kedua.peserta.substring(0, 10)}...)` : '-';
-            row.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketingga.peserta.substring(0, 10)}...)` : '-';
+            row.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketiga.peserta.substring(0, 10)}...)` : '-';
         });
     }
-
-    // --- Fungsi Cetak Keputusan Disimpan (Halaman Keputusan) ---
-    function cetakKeputusanDisimpan() {
-        // Hanya cetak jadual keputusan disimpan, sembunyikan input borang.
-        const form = document.getElementById('form-masuk-keputusan');
-        const originalDisplay = form.style.display;
-        form.style.display = 'none';
-
-        // Pindahkan kelas aktif ke elemen yang ingin dicetak sahaja (halaman keputusan)
-        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-        document.getElementById('keputusan').classList.add('active');
-
-        window.print();
-        
-        // Kembalikan paparan asal dan kelas aktif asal
-        form.style.display = originalDisplay; 
-        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-        document.getElementById(document.querySelector('nav button.active').id.replace('nav-', '')).classList.add('active');
-    }
-
 
     function kiraAnalisis() {
         let markahRumah = { "Merah": 0, "Biru": 0, "Kuning": 0 };
@@ -947,7 +813,8 @@
             };
 
             k.results.forEach(r => {
-                // Logik Analisis kini meliputi kedudukan 1 hingga 6
+                // KEMASKINI: Walaupun lajur paparan hanya tunjuk 1-3, logik kiraan mata 
+                // mestilah guna semua kedudukan yang ada mata (1-6)
                 if (r.kedudukan >= 1 && r.kedudukan <= 6) { 
                     markahRumah[r.rumah] += r.mata;
                     pecahanAcara[key][r.rumah] += r.mata;
@@ -982,33 +849,10 @@
 
     // --- Inisialisasi Aplikasi ---
     document.addEventListener('DOMContentLoaded', () => {
-        muatkanAcaraPilihan(); 
-        
-        // Perbaiki fungsi cetak untuk Analisis agar hanya cetak halaman Analisis sahaja
-        document.getElementById('analisis').querySelector('.btn-print').onclick = function() {
-            // Pindahkan kelas aktif ke elemen yang ingin dicetak sahaja (halaman analisis)
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById('analisis').classList.add('active');
-            window.print();
-            // Kembalikan kelas aktif asal
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById('analisis').classList.add('active'); // Kekalkan di analisis jika butang ini ditekan dari analisis
-        };
-        
-        // Perbaiki fungsi cetak untuk Jana Acara agar hanya cetak halaman Jana Acara sahaja
-        document.getElementById('jana').querySelector('#btn-print-jana').onclick = function() {
-            // Pindahkan kelas aktif ke elemen yang ingin dicetak sahaja (halaman jana)
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById('jana').classList.add('active');
-            window.print();
-            // Kembalikan kelas aktif asal
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById('jana').classList.add('active'); // Kekalkan di jana jika butang ini ditekan dari jana
-        };
+        // Logik initialization kini dihandle oleh dbAuth.onAuthStateChanged
     });
 
 </script>
 
 </body>
 </html>
-
