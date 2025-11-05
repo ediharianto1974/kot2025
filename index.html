@@ -25,8 +25,17 @@
         .data-entry { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
         label { font-weight: bold; margin-bottom: 5px; display: block; color: #004d40; }
         input[type="text"], input[type="number"], select, input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        /* Gaya untuk Checkbox Acara */
+        .acara-checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+        .acara-checkbox-group label { font-weight: normal; display: inline-flex; align-items: center; margin-right: 15px; }
+        .acara-checkbox-group input[type="checkbox"] { width: auto; margin-right: 5px; }
+
         button[type="submit"], .btn { background-color: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
         button[type="submit"]:hover, .btn:hover { background-color: #004d40; }
+        .btn-print { background-color: #00bcd4; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; margin-left: 10px; }
+        .btn-print:hover { background-color: #00838f; }
+
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; font-size: 20px; font-weight: bold; color: #004d40; }
 
         /* Gaya Jadual */
@@ -44,6 +53,18 @@
         .score-title { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
         .total-points { font-size: 2.5em; font-weight: bold; }
         .event-card { border: 1px solid #00796b; border-radius: 6px; padding: 15px; margin-bottom: 10px; background-color: #f0fdfc; }
+        
+        /* Gaya untuk Cetak: Sembunyikan navigasi dan butang pada cetakan */
+        @media print {
+            nav, button, input[type="text"], input[type="submit"], .data-entry div:last-child button, #filter-pendaftaran { display: none !important; }
+            .container { box-shadow: none; margin: 0; padding: 0; }
+            h1 { margin-top: 0; }
+            /* Pastikan hanya jadual yang dicetak */
+            body > div:not(.container), .page:not(.active) { display: none !important; }
+            /* Tunjukkan elemen yang disembunyikan dalam JS jika perlu dicetak */
+            #table-jana-acara, #form-masuk-keputusan, #table-keputusan-disimpan { display: table !important; }
+            .print-hidden { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -57,7 +78,7 @@
         <button onclick="showPage('jana')" id="nav-jana">🏃 Jana Acara & Lorong</button>
         <button onclick="showPage('keputusan')" id="nav-keputusan">🥇 Keputusan & Markah</button>
         <button onclick="showPage('analisis')" id="nav-analisis">📊 Analisis Keseluruhan</button>
-        </nav>
+    </nav>
 
     <div id="login" class="page active">
         <h2>🔒 Log Masuk Admin</h2>
@@ -79,7 +100,11 @@
     <div id="daftar" class="page">
         <h2>📝 Daftar Peserta</h2>
         <form id="form-daftar-peserta">
-             <div><label for="reg-acara">Acara:</label><select id="reg-acara" required></select></div>
+            <div style="grid-column: 1 / -1;">
+                <label>Acara (Maks. 3 Individu + 1 Berpasukan):</label>
+                <div id="reg-acara-container" class="acara-checkbox-group">
+                    </div>
+            </div>
             <div><label for="reg-kategori">Kategori (Tahun):</label><select id="reg-kategori" required>
                 <option value="Tahun 1">Tahun 1</option>
                 <option value="Tahun 2">Tahun 2</option>
@@ -90,6 +115,18 @@
             </select></div>
             <div><label for="reg-jantina">Jantina:</label><select id="reg-jantina" required><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
             <div><label for="reg-rumah">Rumah Sukan:</label><select id="reg-rumah" required><option value="Merah">Rumah Sukan Merah</option><option value="Biru">Rumah Sukan Biru</option><option value="Kuning">Rumah Sukan Kuning</option></select></div>
+            
+            <div id="div-nama-pasukan" style="display: none; grid-column: 1 / -1; border: 1px solid #00796b; padding: 10px; border-radius: 4px;">
+                <p style="font-weight: bold; margin-top: 0;">Maklumat Pasukan (4x100m)</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div><label for="pasukan-no-badan">Nombor Badan Pasukan:</label><input type="text" id="pasukan-no-badan" placeholder="e.g., A123" required></div>
+                    <div><label for="pasukan-nama1">Peserta 1:</label><input type="text" id="pasukan-nama1" class="nama-pasukan" required></div>
+                    <div><label for="pasukan-nama2">Peserta 2:</label><input type="text" id="pasukan-nama2" class="nama-pasukan" required></div>
+                    <div><label for="pasukan-nama3">Peserta 3:</label><input type="text" id="pasukan-nama3" class="nama-pasukan" required></div>
+                    <div><label for="pasukan-nama4">Peserta 4:</label><input type="text" id="pasukan-nama4" class="nama-pasukan" required></div>
+                </div>
+            </div>
+
             <div id="div-nama-individu" style="grid-column: 1 / -1; display: grid; grid-template-columns: 3fr 1fr; gap: 10px;">
                 <div>
                     <label for="reg-nama">Nama Peserta:</label>
@@ -100,17 +137,13 @@
                     <input type="text" id="reg-no-badan" placeholder="e.g., A123" required>
                 </div>
             </div>
-            <div id="div-nama-pasukan" style="display: none; grid-column: 1 / -1;">
-                <label>Nama 4 Peserta (4x100m):</label>
-                <input type="text" class="nama-pasukan" placeholder="Peserta 1" required>
-                <input type="text" class="nama-pasukan" placeholder="Peserta 2" required>
-                <input type="text" class="nama-pasukan" placeholder="Peserta 3" required>
-                <input type="text" class="nama-pasukan" placeholder="Peserta 4" required>
-            </div>
+            
             <button type="submit" style="grid-column: 1 / -1;">➕ Daftar Peserta</button>
         </form>
 
         <h3>Senarai Peserta Berdaftar</h3>
+        <input type="text" id="filter-pendaftaran" onkeyup="filterPendaftaran()" placeholder="Cari mengikut Nama, Acara, Kategori, atau No. Badan..." style="width: 100%; margin-bottom: 15px; padding: 10px;">
+        
         <table id="table-pendaftaran">
 <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th><th>No. Badan</th><th>Tindakan</th></tr></thead>
             <tbody></tbody>
@@ -130,7 +163,10 @@
                 <option value="Tahun 6">Tahun 6</option>
             </select></div>
             <div><label for="jana-jantina">Pilih Jantina:</label><select id="jana-jantina"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
-            <div><button onclick="janaAcara()">🚀 Jana Acara & Lorong</button></div>
+            <div>
+                <button onclick="janaAcara()">🚀 Jana Acara & Lorong</button>
+                <button class="btn-print" onclick="window.print()">🖨️ Cetak</button>
+            </div>
         </div>
         
         <h3 id="jana-tajuk"></h3>
@@ -154,7 +190,10 @@
                 <option value="Tahun 6">Tahun 6</option>
             </select></div>
             <div><label for="kep-jantina">Pilih Jantina:</label><select id="kep-jantina"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
-            <div><button onclick="paparPesertaKeputusan()">🔍 Muatkan Peserta</button></div>
+            <div>
+                <button onclick="paparPesertaKeputusan()">🔍 Muatkan Peserta</button>
+                <button class="btn-print" onclick="window.print()">🖨️ Cetak</button>
+            </div>
         </div>
 
         <h3 id="kep-tajuk"></h3>
@@ -166,7 +205,7 @@
             <button type="submit">✅ Simpan Keputusan & Kira Mata</button>
         </form>
 
-        <h3>Keputusan Disimpan</h3>
+        <h3>Keputusan Disimpan Ringkas</h3>
         <table id="table-keputusan-disimpan">
              <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (6 M)</th><th>Kedua (4 M)</th><th>Ketiga (3 M)</th></tr></thead>
             <tbody></tbody>
@@ -180,9 +219,19 @@
             <div id="score-biru" class="rumah-sukan-score biru"><div class="score-title">Rumah Sukan Biru</div><div class="total-points">0</div></div>
             <div id="score-kuning" class="rumah-sukan-score kuning"><div class="score-title">Rumah Sukan Kuning</div><div class="total-points">0</div></div>
         </div>
+        <div style="text-align: right; margin-top: 10px;">
+             <button class="btn-print" onclick="window.print()">🖨️ Cetak</button>
+        </div>
         
         <h3>Pecahan Markah Mengikut Acara</h3>
         <div id="pecahan-markah"></div>
+
+        <hr>
+
+        <h2>📜 Keputusan Pertandingan Mengikut Acara</h2>
+        <div id="analisis-keputusan-penuh">
+            </div>
+        
     </div>
 </div>
 
@@ -243,6 +292,7 @@
     function showLoading() { document.getElementById('loading').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
     function isAcaraPadang(acara) { return ["Lompat Jauh", "Lompat Tinggi", "Lontar Peluru"].includes(acara); }
+    function isAcaraBerpasukan(acara) { return ACARA_BERPASUKAN.includes(acara); }
     
     function isAcaraAvailable(acara, kategori) {
         const tahun1_3 = ["Tahun 1", "Tahun 2", "Tahun 3"];
@@ -279,7 +329,6 @@
     // III. FIREBASE LISTENERS (MUAT DATA REAL-TIME)
     // ====================================================================
 
-    // Pendaftaran Listener (Fungsi ini dipanggil automatik apabila data berubah)
     dbRefPendaftaran.on('value', (snapshot) => {
         showLoading();
         const data = snapshot.val();
@@ -287,15 +336,17 @@
         if (data) {
             Object.keys(data).forEach(key => pendaftaran.push(data[key]));
         }
+        // Pastikan pendaftaran diasingkan mengikut peserta dan acara
         paparkanPendaftaran();
+        if (document.getElementById('filter-pendaftaran')) {
+             filterPendaftaran();
+        }
     });
 
-    // Acara Dijana Listener
     dbRefAcaraDijana.on('value', (snapshot) => {
         acaraDijana = snapshot.val() || {};
     });
 
-    // Keputusan Listener
     dbRefKeputusan.on('value', (snapshot) => {
         showLoading();
         const data = snapshot.val();
@@ -306,6 +357,7 @@
         paparkanKeputusanDisimpan();
         if (document.getElementById('analisis').classList.contains('active')) {
              kiraAnalisis();
+             paparkanKeputusanPenuh(); // Panggil fungsi baru untuk analisis penuh
         }
         hideLoading();
     });
@@ -315,6 +367,7 @@
     // ====================================================================
     
     function showPage(pageId) {
+        // ... (Fungsi showPage dikekalkan seperti biasa)
         if (['jana', 'keputusan'].includes(pageId) && !isAdmin) {
             alert("Akses Ditolak. Sila log masuk sebagai Admin untuk melihat halaman ini.");
             pageId = 'login'; 
@@ -331,12 +384,14 @@
 
         if (pageId === 'analisis') {
             kiraAnalisis();
+            paparkanKeputusanPenuh(); // Panggil fungsi baru
         } else if (pageId === 'daftar' || pageId === 'jana' || pageId === 'keputusan') {
             muatkanAcaraPilihan();
         }
     }
     
     function toggleNavButtons(loggedIn) {
+         // ... (Fungsi toggleNavButtons dan fungsi Log Masuk dikekalkan)
         const navJana = document.getElementById('nav-jana');
         const navKeputusan = document.getElementById('nav-keputusan');
         const navAnalisis = document.getElementById('nav-analisis');
@@ -378,7 +433,6 @@
         dbAuth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 statusMsg.textContent = 'Log masuk berjaya!';
-                // Pemprosesan dihandle oleh onAuthStateChanged
             })
             .catch((error) => {
                 console.error(error);
@@ -398,7 +452,6 @@
                  showPage('daftar'); 
             }
             
-            // PENTING: Panggil semula paparkanPendaftaran() untuk memaparkan butang Padam
             paparkanPendaftaran(); 
 
         } else {
@@ -409,43 +462,69 @@
             if (currentPage && ['jana', 'keputusan'].includes(currentPage.id)) {
                  showPage('daftar'); 
             } else if (currentPage && currentPage.id !== 'login') {
-                // Kekal di halaman sedia ada jika bukan Admin page
             }
             if (!currentPage) {
-                 showPage('daftar'); // Tunjukkan halaman daftar sebagai lalai
+                 showPage('daftar'); 
             }
-            // PENTING: Panggil semula paparkanPendaftaran() untuk membuang butang Padam (tukar kepada N/A)
             paparkanPendaftaran(); 
         }
         hideLoading();
     });
 
     // ====================================================================
-    // V. FUNGSI APLIKASI UTAMA (Diubahsuai untuk Acara/Kategori baru)
+    // V. FUNGSI APLIKASI UTAMA
     // ====================================================================
 
+    // PENGUBAHSUAIAN: Muatkan Acara sebagai Checkbox dan Validate Kategori
     function muatkanAcaraPilihan() {
-        const selects = ['reg-acara', 'jana-acara', 'kep-acara'];
+        const selects = ['jana-acara', 'kep-acara']; // Dropdown yang dikekalkan
+        
+        // 1. Handle Checkbox Pendaftaran
+        const container = document.getElementById('reg-acara-container');
+        const selectedKategori = document.getElementById('reg-kategori').value;
+        container.innerHTML = '';
+        
+        ACARA_SEMUA.forEach(acara => {
+            if (isAcaraAvailable(acara, selectedKategori)) {
+                const isPasukan = isAcaraBerpasukan(acara);
+                
+                const label = document.createElement('label');
+                label.htmlFor = `acara-${acara.replace(/\s/g, '-')}`;
+                
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'reg-acara';
+                input.value = acara;
+                input.id = `acara-${acara.replace(/\s/g, '-')}`;
+                input.dataset.type = isPasukan ? 'berpasukan' : 'individu';
+                
+                // Tambah listener untuk validasi had
+                input.addEventListener('change', checkAcaraLimit);
+                
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(acara + (isPasukan ? ' (Pasukan)' : ' (Individu)')));
+                container.appendChild(label);
+            }
+        });
+        
+        // 2. Handle Dropdown Jana & Keputusan
         selects.forEach(selectId => {
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
             const currentValue = selectElement.value;
+            let selectedKat; 
             
-            let selectedKategori; 
-            if (selectId.startsWith('reg')) {
-                selectedKategori = document.getElementById('reg-kategori').value;
-            } else if (selectId.startsWith('jana')) {
-                selectedKategori = document.getElementById('jana-kategori').value;
+            if (selectId.startsWith('jana')) {
+                selectedKat = document.getElementById('jana-kategori').value;
             } else if (selectId.startsWith('kep')) {
-                selectedKategori = document.getElementById('kep-kategori').value;
+                selectedKat = document.getElementById('kep-kategori').value;
             }
             
             selectElement.innerHTML = '';
-            
             let firstAcara = '';
             ACARA_SEMUA.forEach(acara => {
-                if (isAcaraAvailable(acara, selectedKategori)) {
+                if (isAcaraAvailable(acara, selectedKat)) {
                     const option = document.createElement('option');
                     option.value = acara;
                     option.textContent = acara;
@@ -453,111 +532,202 @@
                     if (!firstAcara) firstAcara = acara;
                 }
             });
-            
-            if (selectId === 'reg-acara') {
-                selectElement.onchange = toggleNamaInput;
-                if (firstAcara) toggleNamaInput();
-            }
+            selectElement.value = currentValue || firstAcara; 
+        });
 
-            if ([...selectElement.options].some(opt => opt.value === currentValue)) {
-                selectElement.value = currentValue;
-            } else {
-                selectElement.value = firstAcara;
+        toggleNamaInput();
+    }
+    
+    // FUNGSI BARU: Semak Had Acara
+    function checkAcaraLimit() {
+        const checkboxes = document.querySelectorAll('input[name="reg-acara"]:checked');
+        let countIndividu = 0;
+        let countPasukan = 0;
+        let is4x100mSelected = false;
+
+        checkboxes.forEach(cb => {
+            if (cb.dataset.type === 'individu') {
+                countIndividu++;
+            } else if (cb.dataset.type === 'berpasukan') {
+                countPasukan++;
+                if (cb.value === '4x100 meter') is4x100mSelected = true;
             }
         });
+
+        // Hantar amaran jika had dilanggar
+        if (countIndividu > 3) {
+            alert("⚠️ Had Maksimum 3 Acara Individu telah dicapai! Sila nyahpilih satu acara individu.");
+            this.checked = false; 
+            countIndividu--; // Batalkan pilihan ini
+        }
+        if (countPasukan > 1) {
+            alert("⚠️ Had Maksimum 1 Acara Berpasukan telah dicapai!");
+            this.checked = false;
+            countPasukan--; // Batalkan pilihan ini
+        }
+        
+        // Atur paparan borang nama
+        toggleNamaInput();
     }
 
+
+    // PENGUBAHSUAIAN: Hanya tampilkan borang pasukan jika 4x100m dipilih
     function toggleNamaInput() {
-        const acara = document.getElementById('reg-acara').value;
+        const checkboxes = document.querySelectorAll('input[name="reg-acara"]:checked');
+        const isPasukanDipilih = Array.from(checkboxes).some(cb => cb.value === '4x100 meter');
+        const isIndividuDipilih = Array.from(checkboxes).some(cb => !isAcaraBerpasukan(cb.value));
+
         const divIndividu = document.getElementById('div-nama-individu');
-        const divPasukan = document.getElementById('div-nama-pasukan');
         const inputNama = document.getElementById('reg-nama');
         const inputNoBadan = document.getElementById('reg-no-badan'); 
-        const inputPasukan = document.querySelectorAll('.nama-pasukan');
-        
-        if (inputNama) inputNama.addEventListener('input', toUpperCase);
-        if (inputNoBadan) inputNoBadan.addEventListener('input', toUpperCase);
-        inputPasukan.forEach(input => input.addEventListener('input', toUpperCase));
 
-        if (acara === '4x100 meter') {
+        const divPasukan = document.getElementById('div-nama-pasukan');
+        const inputPasukanNama = document.querySelectorAll('.nama-pasukan');
+        const inputPasukanNoBadan = document.getElementById('pasukan-no-badan'); 
+        
+        // Pendaftaran Individu
+        if (isIndividuDipilih) {
+            divIndividu.style.display = 'grid';
+            inputNama.required = true;
+            inputNoBadan.required = true;
+        } else {
             divIndividu.style.display = 'none';
             inputNama.required = false;
-            if (inputNoBadan) inputNoBadan.required = false; 
-            divPasukan.style.display = 'grid';
-            inputPasukan.forEach(input => input.required = true);
-        } else {
-            divIndividu.style.display = 'grid'; 
-            inputNama.required = true;
-            if (inputNoBadan) inputNoBadan.required = true; 
-            divPasukan.style.display = 'none';
-            inputPasukan.forEach(input => input.required = false);
+            inputNoBadan.required = false;
         }
+        
+        // Pendaftaran Pasukan (4x100m)
+        if (isPasukanDipilih) {
+            divPasukan.style.display = 'block'; 
+            inputPasukanNama.forEach(input => input.required = true);
+            inputPasukanNoBadan.required = true;
+        } else {
+            divPasukan.style.display = 'none';
+            inputPasukanNama.forEach(input => input.required = false);
+            inputPasukanNoBadan.required = false;
+        }
+        
+        // Validasi pendaftaran
+        if (isIndividuDipilih || isPasukanDipilih) {
+            document.getElementById('form-daftar-peserta').querySelector('button[type="submit"]').disabled = false;
+        } else {
+            document.getElementById('form-daftar-peserta').querySelector('button[type="submit"]').disabled = true;
+        }
+        
+        // PENTING: Attach toUpperCase listeners
+        inputNama.addEventListener('input', toUpperCase);
+        inputNoBadan.addEventListener('input', toUpperCase);
+        inputPasukanNama.forEach(input => input.addEventListener('input', toUpperCase));
+        inputPasukanNoBadan.addEventListener('input', toUpperCase);
+
     }
 
     // --- EVENT LISTENERS UNTUK CATEGORY CHANGE ---
     document.getElementById('reg-kategori').onchange = muatkanAcaraPilihan;
     document.getElementById('jana-kategori').onchange = muatkanAcaraPilihan; 
     document.getElementById('kep-kategori').onchange = muatkanAcaraPilihan; 
+    document.getElementById('reg-jantina').onchange = muatkanAcaraPilihan; 
 
-    // --- Halaman Daftar Acara (Firebase Write) ---
+
+    // PENGUBAHSUAIAN: Handle Pendaftaran Berbilang Acara
     document.getElementById('form-daftar-peserta').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const acara = document.getElementById('reg-acara').value;
         const kategori = document.getElementById('reg-kategori').value;
         const jantina = document.getElementById('reg-jantina').value;
         const rumah = document.getElementById('reg-rumah').value;
-        let peserta;
-        const firebaseKey = dbRefPendaftaran.push().key; 
+        const checkboxes = Array.from(document.querySelectorAll('input[name="reg-acara"]:checked')).map(cb => cb.value);
 
-        if (acara === '4x100 meter') {
-            const namaPasukan = Array.from(document.querySelectorAll('.nama-pasukan')).map(input => input.value.trim()).filter(n => n);
-            if (namaPasukan.length !== 4) { alert('Sila masukkan nama 4 peserta untuk 4x100 meter.'); return; }
-            peserta = namaPasukan.join(', ');
-        } else {
-            peserta = document.getElementById('reg-nama').value.trim();
+        if (checkboxes.length === 0) {
+            alert("Sila pilih sekurang-kurangnya satu acara untuk pendaftaran.");
+            return;
         }
+
+        const namaPesertaIndividu = document.getElementById('reg-nama').value.trim();
+        const noBadanIndividu = document.getElementById('reg-no-badan').value.trim().toUpperCase();
         
-        if (acara === '4x100 meter' && pendaftaran.some(p => p.acara === acara && p.kategori === kategori && p.jantina === jantina && p.rumah === rumah)) {
-             alert(`Rumah Sukan ${rumah} sudah didaftarkan untuk ${acara} ${kategori} ${jantina}.`);
-             return;
-        }
+        const namaPasukan = Array.from(document.querySelectorAll('.nama-pasukan')).map(input => input.value.trim());
+        const noBadanPasukan = document.getElementById('pasukan-no-badan').value.trim().toUpperCase();
+        const acaraPasukan = '4x100 meter';
 
-        let noBadan = '';
-        if (acara !== '4x100 meter') {
-            const inputNoBadan = document.getElementById('reg-no-badan');
-            noBadan = inputNoBadan.value.trim().toUpperCase(); 
+        let pendaftaranBatch = [];
 
-            if (pendaftaran.some(p => p.noBadan === noBadan && p.noBadan !== '' && p.kategori === kategori)) { 
-                alert(`Nombor Badan ${noBadan} telah digunakan dalam kategori ${kategori}. Sila gunakan nombor lain.`);
+        // 1. Pendaftaran Acara Individu
+        checkboxes.filter(a => !isAcaraBerpasukan(a)).forEach(acara => {
+            if (!namaPesertaIndividu || !noBadanIndividu) {
+                alert(`Sila lengkapkan Nama dan No. Badan untuk acara individu: ${acara}`);
                 return;
             }
+            // Semak duplikasi (No Badan hanya perlu unik untuk kategori/peserta)
+            if (pendaftaran.some(p => p.noBadan === noBadanIndividu && p.acara === acara && p.kategori === kategori)) { 
+                alert(`Peserta dengan No. Badan ${noBadanIndividu} sudah didaftar untuk ${acara} ${kategori} ${jantina}. Pendaftaran dibatalkan.`);
+                return;
+            }
+            
+            const firebaseKey = dbRefPendaftaran.push().key; 
+            pendaftaranBatch.push({
+                id: firebaseKey, acara, kategori, jantina, rumah, 
+                peserta: namaPesertaIndividu, noBadan: noBadanIndividu
+            });
+        });
+
+        // 2. Pendaftaran Acara Berpasukan
+        if (checkboxes.includes(acaraPasukan)) {
+            if (namaPasukan.length !== 4 || !noBadanPasukan) {
+                alert('Sila lengkapkan Nama 4 Peserta dan No. Badan Pasukan untuk 4x100 meter.');
+                return;
+            }
+             // Semak duplikasi (Acara Pasukan hanya boleh daftar sekali)
+            if (pendaftaran.some(p => p.acara === acaraPasukan && p.kategori === kategori && p.jantina === jantina && p.rumah === rumah)) {
+                alert(`Rumah Sukan ${rumah} sudah didaftarkan untuk ${acaraPasukan} ${kategori} ${jantina}. Pendaftaran dibatalkan.`);
+                return;
+            }
+            
+            const firebaseKey = dbRefPendaftaran.push().key; 
+            pendaftaranBatch.push({
+                id: firebaseKey, acara: acaraPasukan, kategori, jantina, rumah, 
+                peserta: namaPasukan.join(', '), noBadan: noBadanPasukan // Simpan semua nama dalam satu string
+            });
         }
         
-        const dataPeserta = { acara, kategori, jantina, rumah, peserta, noBadan, id: firebaseKey }; 
+        if (pendaftaranBatch.length === 0) {
+            alert("Tiada pendaftaran baru yang sah untuk disimpan.");
+            return;
+        }
         
-        showLoading(); // MULA SHOW LOADING SEBELUM WRITE DATA
-        
-        dbRefPendaftaran.child(firebaseKey).set(dataPeserta)
+        showLoading();
+        let updates = {};
+        pendaftaranBatch.forEach(item => {
+            updates[`/${item.id}`] = item;
+        });
+
+        dbRefPendaftaran.update(updates)
             .then(() => {
-                alert('Peserta berjaya didaftar dan disimpan ke Firebase!');
+                alert(`${pendaftaranBatch.length} pendaftaran berjaya disimpan ke Firebase!`);
                 e.target.reset();
-                // KEMASKINI: Keluarkan panggilan muatkanAcaraPilihan() di sini. 
-                // Firebase listener akan menguruskan pemaparan senarai.
-                hideLoading(); // Sembunyikan loading
+                muatkanAcaraPilihan(); // Reset pilihan
+                hideLoading();
             })
             .catch(error => {
                 console.error("Ralat pendaftaran:", error);
                 alert('Gagal mendaftar. Lihat konsol untuk ralat.');
-                hideLoading(); // Pastikan loading hilang jika ada ralat
+                hideLoading();
             });
     });
 
     function paparkanPendaftaran() {
         const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
+        
         pendaftaran.forEach(p => {
             const row = tbody.insertRow();
+            row.dataset.acara = p.acara.toLowerCase();
+            row.dataset.kategori = p.kategori.toLowerCase();
+            row.dataset.jantina = p.jantina.toLowerCase();
+            row.dataset.rumah = p.rumah.toLowerCase();
+            row.dataset.peserta = p.peserta.toLowerCase();
+            row.dataset.nobadan = (p.noBadan || '').toLowerCase();
+            
             row.insertCell().textContent = p.acara;
             row.insertCell().textContent = p.kategori;
             row.insertCell().textContent = p.jantina;
@@ -579,6 +749,35 @@
                 cellTindakan.textContent = 'N/A';
             }
         });
+        filterPendaftaran();
+    }
+
+    function filterPendaftaran() {
+        const input = document.getElementById('filter-pendaftaran');
+        if (!input) return;
+
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('table-pendaftaran');
+        const tr = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let i = 0; i < tr.length; i++) {
+            let rowMatches = false;
+            if (
+                tr[i].dataset.acara.toUpperCase().indexOf(filter) > -1 ||
+                tr[i].dataset.kategori.toUpperCase().indexOf(filter) > -1 ||
+                tr[i].dataset.peserta.toUpperCase().indexOf(filter) > -1 ||
+                tr[i].dataset.nobadan.toUpperCase().indexOf(filter) > -1 ||
+                tr[i].dataset.rumah.toUpperCase().indexOf(filter) > -1
+            ) {
+                rowMatches = true;
+            }
+
+            if (rowMatches) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
     }
 
     function padamPeserta(pesertaId, namaPeserta) {
@@ -608,6 +807,7 @@
         const jantina = document.getElementById('jana-jantina').value;
         const key = getUniqueKey(acara, kategori, jantina);
 
+        // ... (Logik Jana Acara dikekalkan) ...
         if (!isAcaraAvailable(acara, kategori)) {
             document.getElementById('jana-status').textContent = `⚠️ Acara ${acara} tidak ditawarkan untuk ${kategori}.`;
             document.getElementById('table-jana-acara').style.display = 'none';
@@ -653,8 +853,6 @@
         const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         slots.sort((a, b) => a.slot - b.slot).forEach(p => {
-            // Ralat yang dikenal pasti: anda menggunakan row = tbody.insertCell() bukannya row = tbody.insertRow().
-            // Saya telah betulkannya di bawah:
             const row = tbody.insertRow();
             row.insertCell().textContent = p.slot;
             row.insertCell().textContent = p.rumah;
@@ -662,7 +860,7 @@
         });
         document.getElementById('table-jana-acara').style.display = 'table';
     }
-
+    // ... (Logik Keputusan dan Analisis) ...
     // --- Halaman Keputusan (Firebase Read/Write) ---
     async function paparPesertaKeputusan() {
         if (!isAdmin) return alert("Akses Ditolak. Hanya Admin boleh memasukkan keputusan.");
@@ -712,7 +910,6 @@
             const cellKedudukan = row.insertCell();
             const inputKedudukan = document.createElement('select');
             inputKedudukan.name = `kedudukan-${index}`;
-            // Pilihan BARU, termasuk Kedudukan 4, 5, dan 6:
             inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (6 M)</option><option value="2">2 (4 M)</option><option value="3">3 (3 M)</option><option value="4">4 (1 M)</option><option value="5">5 (1 M)</option><option value="6">6 (1 M)</option>';
             cellKedudukan.appendChild(inputKedudukan);
 
@@ -801,7 +998,79 @@
         });
     }
 
+    // FUNGSI BARU: PAPARKAN KEPUTUSAN PENUH
+    function paparkanKeputusanPenuh() {
+        const container = document.getElementById('analisis-keputusan-penuh');
+        container.innerHTML = '';
+        
+        // Susun keputusan mengikut Acara, Kategori, Jantina
+        const keputusanSorted = [...keputusan].sort((a, b) => {
+            if (a.acara !== b.acara) return a.acara.localeCompare(b.acara);
+            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+            return a.jantina.localeCompare(b.jantina);
+        });
+
+        keputusanSorted.forEach(k => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-card'; 
+            eventDiv.style.marginBottom = '20px';
+            eventDiv.style.padding = '15px';
+            
+            const unit = isAcaraPadang(k.acara) ? 'm' : 's';
+
+            let html = `<h4>${k.acara} - ${k.kategori} ${k.jantina}</h4>`;
+            
+            // Uruskan Keputusan mengikut kedudukan
+            const resultsSorted = k.results.filter(r => r.kedudukan > 0).sort((a, b) => a.kedudukan - b.kedudukan);
+            const totalPeserta = k.results.length; // Jumlah peserta yang sepatutnya ambil bahagian
+            const pesertaYangRekod = resultsSorted.length; // Jumlah peserta yang mempunyai rekod kedudukan
+
+            if (pesertaYangRekod === 0) {
+                 html += '<p>Tiada keputusan direkodkan.</p>';
+            } else {
+                 html += `
+                    <table style="width: 100%; font-size: 0.9em; margin-top: 10px;">
+                    <thead><tr>
+                        <th>Kedudukan</th>
+                        <th>Rumah Sukan</th>
+                        <th>Peserta</th>
+                        <th>Keputusan (${unit})</th>
+                        <th>Mata</th>
+                    </tr></thead>
+                    <tbody>
+                 `;
+                 
+                 // Logik Paparan:
+                 // Jika 3 peserta atau kurang, hanya paparkan kedudukan 1, 2, 3 (yang ada)
+                 // Jika lebih 3 peserta, paparkan semua yang ada kedudukan
+                 
+                 const resultsToDisplay = (totalPeserta <= 3) 
+                     ? resultsSorted.filter(r => r.kedudukan <= 3) // Filter hanya 1, 2, 3
+                     : resultsSorted; // Papar semua (1-6)
+
+                 resultsToDisplay.forEach(r => {
+                     const rumahClass = r.rumah.toLowerCase();
+                     html += `
+                        <tr>
+                            <td>${r.kedudukan}</td>
+                            <td><span class="${rumahClass}" style="padding: 2px 5px; border-radius: 3px;">${r.rumah}</span></td>
+                            <td>${r.peserta}</td>
+                            <td>${r.keputusan ? r.keputusan.toFixed(2) : '-'}</td>
+                            <td>${r.mata}</td>
+                        </tr>
+                     `;
+                 });
+                 
+                 html += '</tbody></table>';
+            }
+            
+            eventDiv.innerHTML = html;
+            container.appendChild(eventDiv);
+        });
+    }
+
     function kiraAnalisis() {
+        // ... (Fungsi kiraAnalisis dikekalkan seperti biasa)
         let markahRumah = { "Merah": 0, "Biru": 0, "Kuning": 0 };
         let pecahanAcara = {}; 
 
@@ -813,8 +1082,6 @@
             };
 
             k.results.forEach(r => {
-                // KEMASKINI: Walaupun lajur paparan hanya tunjuk 1-3, logik kiraan mata 
-                // mestilah guna semua kedudukan yang ada mata (1-6)
                 if (r.kedudukan >= 1 && r.kedudukan <= 6) { 
                     markahRumah[r.rumah] += r.mata;
                     pecahanAcara[key][r.rumah] += r.mata;
@@ -849,7 +1116,7 @@
 
     // --- Inisialisasi Aplikasi ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Logik initialization kini dihandle oleh dbAuth.onAuthStateChanged
+        // ...
     });
 
 </script>
