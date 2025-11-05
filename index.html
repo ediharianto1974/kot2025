@@ -390,7 +390,7 @@
             });
     });
 
-    // --- Semak Status Auth Semasa Muat Halaman (Wajib) ---
+// --- Semak Status Auth Semasa Muat Halaman (Wajib) ---
     dbAuth.onAuthStateChanged((user) => {
         if (user) {
             isAdmin = true;
@@ -400,6 +400,10 @@
             if (!currentPage || currentPage.id === 'login') {
                  showPage('daftar'); 
             }
+            
+            // PENTING: Panggil semula paparkanPendaftaran() untuk memaparkan butang Padam
+            paparkanPendaftaran(); 
+
         } else {
             isAdmin = false;
             toggleNavButtons(false);
@@ -413,6 +417,8 @@
             if (!currentPage) {
                  showPage('daftar'); // Tunjukkan halaman daftar sebagai lalai
             }
+            // PENTING: Panggil semula paparkanPendaftaran() untuk membuang butang Padam
+            paparkanPendaftaran(); 
         }
         hideLoading();
     });
@@ -548,7 +554,7 @@
             });
     });
 
-    function paparkanPendaftaran() {
+function paparkanPendaftaran() {
         const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         pendaftaran.forEach(p => {
@@ -561,7 +567,9 @@
             row.insertCell().textContent = p.noBadan || '-'; 
 
             const cellTindakan = row.insertCell();
-            if (isAdmin) {
+            
+            // LOGIK DIPERBAIKI UNTUK MEMASTIKAN ISADMIN DIGUNAKAN
+            if (isAdmin) { 
                 const btnPadam = document.createElement('button');
                 btnPadam.textContent = '❌ Padam';
                 btnPadam.className = 'btn'; 
@@ -846,3 +854,4 @@
 
 </body>
 </html>
+
