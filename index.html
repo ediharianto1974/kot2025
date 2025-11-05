@@ -20,13 +20,18 @@
         .page { display: none; padding: 20px 0; }
         .page.active { display: block; }
 
-        /* Gaya Borang */
+        /* Gaya Borang & Penapis */
         form, .data-entry { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; }
         .data-entry { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        .filter-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; border: 1px dashed #00796b; border-radius: 6px; margin-bottom: 20px;}
+
         label { font-weight: bold; margin-bottom: 5px; display: block; color: #004d40; }
         input[type="text"], input[type="number"], select, input[type="email"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button[type="submit"], .btn { background-color: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        button[type="submit"], .btn, .btn-print { background-color: #00796b; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
         button[type="submit"]:hover, .btn:hover { background-color: #004d40; }
+        .btn-print { background-color: #607d8b; margin-top: 10px; }
+        .btn-print:hover { background-color: #455a64; }
+
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; font-size: 20px; font-weight: bold; color: #004d40; }
 
         /* Gaya Jadual */
@@ -44,6 +49,15 @@
         .score-title { font-size: 1.2em; font-weight: bold; margin-bottom: 5px; }
         .total-points { font-size: 2.5em; font-weight: bold; }
         .event-card { border: 1px solid #00796b; border-radius: 6px; padding: 15px; margin-bottom: 10px; background-color: #f0fdfc; }
+        
+        /* Gaya Cetak (Sembunyikan kawalan semasa mencetak) */
+        @media print {
+            .container { box-shadow: none; border: none; }
+            nav, #form-daftar-peserta, .filter-group, .data-entry, button, .btn, .btn-print, #kep-tajuk, .loading-overlay { display: none !important; }
+            h1 { page-break-after: always; }
+            h2, h3 { page-break-before: always; }
+            table { margin-top: 0; }
+        }
     </style>
 </head>
 <body>
@@ -111,6 +125,31 @@
         </form>
 
         <h3>Senarai Peserta Berdaftar</h3>
+        <div class="filter-group">
+            <div><label for="filter-kategori">Kategori:</label><select id="filter-kategori" onchange="paparkanPendaftaran(true)">
+                <option value="Semua">Semua</option>
+                <option value="Tahun 1">Tahun 1</option>
+                <option value="Tahun 2">Tahun 2</option>
+                <option value="Tahun 3">Tahun 3</option>
+                <option value="Tahun 4">Tahun 4</option>
+                <option value="Tahun 5">Tahun 5</option>
+                <option value="Tahun 6">Tahun 6</option>
+            </select></div>
+            <div><label for="filter-acara">Acara:</label><select id="filter-acara" onchange="paparkanPendaftaran(true)">
+                <option value="Semua">Semua</option>
+                </select></div>
+            <div><label for="filter-jantina">Jantina:</label><select id="filter-jantina" onchange="paparkanPendaftaran(true)">
+                <option value="Semua">Semua</option>
+                <option value="Lelaki">Lelaki</option>
+                <option value="Perempuan">Perempuan</option>
+            </select></div>
+            <div><label for="filter-rumah">Rumah Sukan:</label><select id="filter-rumah" onchange="paparkanPendaftaran(true)">
+                <option value="Semua">Semua</option>
+                <option value="Merah">Merah</option>
+                <option value="Biru">Biru</option>
+                <option value="Kuning">Kuning</option>
+            </select></div>
+        </div>
         <table id="table-pendaftaran">
 <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Rumah Sukan</th><th>Peserta</th><th>No. Badan</th><th>Tindakan</th></tr></thead>
             <tbody></tbody>
@@ -139,7 +178,8 @@
             <thead><tr><th>Lorong/Giliran</th><th>Rumah Sukan</th><th>Peserta</th></tr></thead>
             <tbody></tbody>
         </table>
-    </div>
+        <button class="btn-print" onclick="window.print()" style="display: none;" id="btn-print-jana">🖨️ Cetak Senarai Lorong</button>
+        </div>
 
     <div id="keputusan" class="page">
         <h2>🥇 Masukkan Keputusan & Mata</h2>
@@ -171,7 +211,8 @@
             <thead><tr><th>Acara</th><th>Kategori</th><th>Jantina</th><th>Juara (6 M)</th><th>Kedua (4 M)</th><th>Ketiga (3 M)</th></tr></thead>
             <tbody></tbody>
         </table>
-    </div>
+        <button class="btn-print" onclick="cetakKeputusanDisimpan()">🖨️ Cetak Senarai Keputusan</button>
+        </div>
 
     <div id="analisis" class="page">
         <h2>📊 Analisis Keseluruhan Rumah Sukan</h2>
@@ -183,7 +224,9 @@
         
         <h3>Pecahan Markah Mengikut Acara</h3>
         <div id="pecahan-markah"></div>
-    </div>
+
+        <button class="btn-print" onclick="window.print()">🖨️ Cetak Laporan Analisis</button>
+        </div>
 </div>
 
 <script>
@@ -287,7 +330,7 @@
         if (data) {
             Object.keys(data).forEach(key => pendaftaran.push(data[key]));
         }
-        paparkanPendaftaran();
+        paparkanPendaftaran(false); // Papar semula senarai dengan filter semasa
     });
 
     // Acara Dijana Listener
@@ -399,7 +442,7 @@
             }
             
             // PENTING: Panggil semula paparkanPendaftaran() untuk memaparkan butang Padam
-            paparkanPendaftaran(); 
+            paparkanPendaftaran(false); 
 
         } else {
             isAdmin = false;
@@ -415,7 +458,7 @@
                  showPage('daftar'); // Tunjukkan halaman daftar sebagai lalai
             }
             // PENTING: Panggil semula paparkanPendaftaran() untuk membuang butang Padam (tukar kepada N/A)
-            paparkanPendaftaran(); 
+            paparkanPendaftaran(false); 
         }
         hideLoading();
     });
@@ -425,13 +468,16 @@
     // ====================================================================
 
     function muatkanAcaraPilihan() {
-        const selects = ['reg-acara', 'jana-acara', 'kep-acara'];
+        const selects = ['reg-acara', 'jana-acara', 'kep-acara', 'filter-acara'];
+        const uniqueAcara = ['Semua', ...ACARA_SEMUA];
+
         selects.forEach(selectId => {
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
             const currentValue = selectElement.value;
             
+            // Untuk borang pendaftaran/jana/keputusan, guna logik kategori untuk tapis acara
             let selectedKategori; 
             if (selectId.startsWith('reg')) {
                 selectedKategori = document.getElementById('reg-kategori').value;
@@ -444,13 +490,21 @@
             selectElement.innerHTML = '';
             
             let firstAcara = '';
-            ACARA_SEMUA.forEach(acara => {
-                if (isAcaraAvailable(acara, selectedKategori)) {
+            uniqueAcara.forEach(acara => {
+                // Untuk penapis, tunjukkan semua acara
+                const isFilter = selectId === 'filter-acara';
+                if (isFilter || isAcaraAvailable(acara, selectedKategori)) {
+                    if (isFilter && acara === 'Semua') {
+                        // "Semua" hanya untuk filter, bukan borang pendaftaran
+                    } else if (!isFilter && acara === 'Semua') {
+                        return; 
+                    }
+                    
                     const option = document.createElement('option');
                     option.value = acara;
                     option.textContent = acara;
                     selectElement.appendChild(option);
-                    if (!firstAcara) firstAcara = acara;
+                    if (!firstAcara && acara !== 'Semua') firstAcara = acara;
                 }
             });
             
@@ -461,6 +515,8 @@
 
             if ([...selectElement.options].some(opt => opt.value === currentValue)) {
                 selectElement.value = currentValue;
+            } else if (selectId.startsWith('filter')) {
+                selectElement.value = 'Semua';
             } else {
                 selectElement.value = firstAcara;
             }
@@ -542,8 +598,6 @@
             .then(() => {
                 alert('Peserta berjaya didaftar dan disimpan ke Firebase!');
                 e.target.reset();
-                // KEMASKINI: Keluarkan panggilan muatkanAcaraPilihan() di sini. 
-                // Firebase listener akan menguruskan pemaparan senarai.
                 hideLoading(); // Sembunyikan loading
             })
             .catch(error => {
@@ -553,10 +607,31 @@
             });
     });
 
-    function paparkanPendaftaran() {
+    // --- Papar Pendaftaran dengan Filter ---
+    function paparkanPendaftaran(isFilteredByUser) {
         const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
-        pendaftaran.forEach(p => {
+
+        // Muat nilai filter
+        const filterKategori = document.getElementById('filter-kategori').value;
+        const filterAcara = document.getElementById('filter-acara').value;
+        const filterJantina = document.getElementById('filter-jantina').value;
+        const filterRumah = document.getElementById('filter-rumah').value;
+
+        // Populate Acara filter (hanya buat sekali semasa mula-mula)
+        if (!isFilteredByUser) {
+            muatkanAcaraPilihan();
+        }
+
+        const filteredPeserta = pendaftaran.filter(p => {
+            const matchKategori = filterKategori === 'Semua' || p.kategori === filterKategori;
+            const matchAcara = filterAcara === 'Semua' || p.acara === filterAcara;
+            const matchJantina = filterJantina === 'Semua' || p.jantina === filterJantina;
+            const matchRumah = filterRumah === 'Semua' || p.rumah === filterRumah;
+            return matchKategori && matchAcara && matchJantina && matchRumah;
+        });
+
+        filteredPeserta.forEach(p => {
             const row = tbody.insertRow();
             row.insertCell().textContent = p.acara;
             row.insertCell().textContent = p.kategori;
@@ -579,6 +654,7 @@
                 cellTindakan.textContent = 'N/A';
             }
         });
+        hideLoading();
     }
 
     function padamPeserta(pesertaId, namaPeserta) {
@@ -607,20 +683,23 @@
         const kategori = document.getElementById('jana-kategori').value;
         const jantina = document.getElementById('jana-jantina').value;
         const key = getUniqueKey(acara, kategori, jantina);
+        const btnPrint = document.getElementById('btn-print-jana');
 
         if (!isAcaraAvailable(acara, kategori)) {
             document.getElementById('jana-status').textContent = `⚠️ Acara ${acara} tidak ditawarkan untuk ${kategori}.`;
             document.getElementById('table-jana-acara').style.display = 'none';
             document.getElementById('jana-tajuk').textContent = '';
+            btnPrint.style.display = 'none';
             return;
         }
 
         const pesertaAcara = pendaftaran.filter(p => p.acara === acara && p.kategori === kategori && p.jantina === jantina);
-        document.getElementById('jana-tajuk').textContent = `${acara} ${kategori} ${jantina}`;
+        document.getElementById('jana-tajuk').textContent = `Senarai Lorong: ${acara} ${kategori} ${jantina}`;
 
         if (pesertaAcara.length === 0) {
             document.getElementById('jana-status').textContent = '❌ Tiada peserta didaftarkan untuk acara ini.';
             document.getElementById('table-jana-acara').style.display = 'none';
+            btnPrint.style.display = 'none';
             return;
         }
 
@@ -642,10 +721,12 @@
             .then(() => {
                  document.getElementById('jana-status').textContent = `✅ ${slots.length} peserta telah dijana untuk lorong/giliran dan disimpan ke Firebase.`;
                  paparkanJanaAcara(slots);
+                 btnPrint.style.display = 'block'; // Tunjuk butang cetak selepas jana
             })
              .catch(error => {
                 console.error("Ralat Jana Acara:", error);
                 alert('Gagal menjana acara. Lihat konsol untuk ralat.');
+                btnPrint.style.display = 'none';
             });
     }
     
@@ -653,8 +734,6 @@
         const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         slots.sort((a, b) => a.slot - b.slot).forEach(p => {
-            // Ralat yang dikenal pasti: anda menggunakan row = tbody.insertCell() bukannya row = tbody.insertRow().
-            // Saya telah betulkannya di bawah:
             const row = tbody.insertRow();
             row.insertCell().textContent = p.slot;
             row.insertCell().textContent = p.rumah;
@@ -712,7 +791,7 @@
             const cellKedudukan = row.insertCell();
             const inputKedudukan = document.createElement('select');
             inputKedudukan.name = `kedudukan-${index}`;
-            // Pilihan BARU, termasuk Kedudukan 4, 5, dan 6:
+            // Pilihan Kedudukan Baru (6 tempat)
             inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (6 M)</option><option value="2">2 (4 M)</option><option value="3">3 (3 M)</option><option value="4">4 (1 M)</option><option value="5">5 (1 M)</option><option value="6">6 (1 M)</option>';
             cellKedudukan.appendChild(inputKedudukan);
 
@@ -801,6 +880,15 @@
         });
     }
 
+    // --- Fungsi Cetak Keputusan Disimpan (Halaman Keputusan) ---
+    function cetakKeputusanDisimpan() {
+        // Hanya cetak jadual keputusan disimpan, sembunyikan input borang.
+        const originalDisplay = document.getElementById('form-masuk-keputusan').style.display;
+        document.getElementById('form-masuk-keputusan').style.display = 'none';
+        window.print();
+        document.getElementById('form-masuk-keputusan').style.display = originalDisplay; 
+    }
+
     function kiraAnalisis() {
         let markahRumah = { "Merah": 0, "Biru": 0, "Kuning": 0 };
         let pecahanAcara = {}; 
@@ -813,7 +901,8 @@
             };
 
             k.results.forEach(r => {
-                if (r.kedudukan >= 1 && r.kedudukan <= 6) { // UBAH HAD KEPADA 6
+                // Logik Analisis kini meliputi kedudukan 1 hingga 6
+                if (r.kedudukan >= 1 && r.kedudukan <= 6) { 
                     markahRumah[r.rumah] += r.mata;
                     pecahanAcara[key][r.rumah] += r.mata;
                 }
@@ -847,12 +936,11 @@
 
     // --- Inisialisasi Aplikasi ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Logik initialization kini dihandle oleh dbAuth.onAuthStateChanged
+        // Muatkan Acara untuk filter pada mulanya
+        muatkanAcaraPilihan(); 
     });
 
 </script>
 
 </body>
 </html>
-
-
