@@ -231,7 +231,14 @@
     const ACARA_SEMUA = [...ACARA_INDIVIDU, ...ACARA_BERPASUKAN];
     const KATEGORI = ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6"]; 
     const LORONG = { "100 meter": 6, "200 meter": 3, "4x100 meter": 3, "100 Meter Berpagar": 6 };
-    const MATA = { "1": 5, "2": 3, "3": 1 };
+    const MATA = { 
+        "1": 6,  // Johan
+        "2": 4,  // Kedua
+        "3": 3,  // Ketiga
+        "4": 1,  // Keempat
+        "5": 1,  // Kelima
+        "6": 1   // Keenam
+    };
 
     function showLoading() { document.getElementById('loading').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
@@ -705,7 +712,8 @@
             const cellKedudukan = row.insertCell();
             const inputKedudukan = document.createElement('select');
             inputKedudukan.name = `kedudukan-${index}`;
-            inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (Emas)</option><option value="2">2 (Perak)</option><option value="3">3 (Gangsa)</option>';
+            // Pilihan BARU, termasuk Kedudukan 4, 5, dan 6:
+            inputKedudukan.innerHTML = '<option value="">-</option><option value="1">1 (6 M)</option><option value="2">2 (4 M)</option><option value="3">3 (3 M)</option><option value="4">4 (1 M)</option><option value="5">5 (1 M)</option><option value="6">6 (1 M)</option>';
             cellKedudukan.appendChild(inputKedudukan);
 
             const resultExisting = keputusan.find(k => k.key === key);
@@ -846,3 +854,4 @@
 
 </body>
 </html>
+
