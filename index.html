@@ -254,7 +254,8 @@
 
     // Inisialisasi Firebase
     if (firebaseConfig.apiKey.includes("GANTI_DENGAN_")) {
-        // ... (kod inisialisasi Firebase)
+        // Biarkan kosong jika anda tidak menggunakan Firebase
+        // Anda boleh padam bahagian ini jika anda sudah meletakkan config yang betul
     } else {
         firebase.initializeApp(firebaseConfig);
     }
@@ -295,7 +296,6 @@
     function isAcaraPadang(acara) { return ["Lompat Jauh", "Lompat Tinggi", "Lontar Peluru"].includes(acara); }
     
     function isAcaraAvailable(acara, kategori) {
-        // ... (kod sedia ada) ...
         const tahun1_3 = ["Tahun 1", "Tahun 2", "Tahun 3"];
         if (acara === "100 Meter Berpagar") {
             return !tahun1_3.includes(kategori);
@@ -312,7 +312,6 @@
         return acara.replace(/\s/g, '_') + '|' + kategori.replace(/\s/g, '_') + '|' + jantina; 
     }
     function shuffleArray(array) {
-        // ... (kod sedia ada) ...
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
@@ -323,13 +322,12 @@
         event.target.value = event.target.value.toUpperCase();
     };
     
-    // FUNGSI BARU UNTUK CETAK (ISU 1 & 2)
+    // FUNGSI UNTUK CETAK (ISU 1 & 2)
     function printPage(targetId) {
         const title = document.querySelector('h1').textContent;
         const targetElement = document.getElementById(targetId);
 
         if (targetId === 'analisis' || targetId === 'jana') {
-            // Untuk halaman yang mempunyai 'printable-area' pada elemen h3/table
             const targetArea = targetElement.querySelector('.printable-area');
             if (targetArea) {
                 const win = window.open('', '_blank');
@@ -344,7 +342,6 @@
                 win.print();
             }
         } else if (targetId === 'keputusan-disimpan') {
-             // Untuk bahagian Jadual Keputusan Disimpan
             const table = document.getElementById('table-keputusan-disimpan');
             const win = window.open('', '_blank');
             win.document.write('<html><head><title>Cetak - Keputusan Disimpan</title>');
@@ -363,7 +360,6 @@
     // ====================================================================
     // III. FIREBASE LISTENERS (MUAT DATA REAL-TIME)
     // ====================================================================
-    // ... (kod sedia ada) ...
 
     dbRefPendaftaran.on('value', (snapshot) => {
         showLoading();
@@ -372,7 +368,8 @@
         if (data) {
             Object.keys(data).forEach(key => pendaftaran.push(data[key]));
         }
-        paparkanPendaftaran();
+        // 🚨 Fungsi yang hilang telah dimasukkan di bawah, kini ia boleh dipanggil
+        paparkanPendaftaran(); 
     });
 
     dbRefAcaraDijana.on('value', (snapshot) => {
@@ -386,7 +383,7 @@
         if (data) {
             Object.keys(data).forEach(key => keputusan.push(data[key]));
         }
-        paparkanKeputusanDisimpan(); // Diperbaiki untuk isi 2 jadual
+        paparkanKeputusanDisimpan(); 
         if (document.getElementById('analisis').classList.contains('active')) {
              kiraAnalisis();
         }
@@ -397,10 +394,8 @@
     // ====================================================================
     // IV. PENGURUSAN UI DAN AUTHENTICATION
     // ====================================================================
-    // ... (kod sedia ada) ...
 
     function showPage(pageId) {
-        // ... (kod sedia ada) ...
         if (['jana', 'keputusan'].includes(pageId) && !isAdmin) {
             alert("Akses Ditolak. Sila log masuk sebagai Admin untuk melihat halaman ini.");
             pageId = 'login'; 
@@ -417,13 +412,50 @@
 
         if (pageId === 'analisis') {
             kiraAnalisis();
-            paparkanKeputusanDisimpan(); // Pastikan jadual pemenang diisi (ISU 3)
+            paparkanKeputusanDisimpan(); 
         } else if (pageId === 'daftar' || pageId === 'jana' || pageId === 'keputusan') {
             muatkanAcaraPilihan();
         }
     }
     
-    // ... (kod toggleNavButtons, logoutAdmin, form-login sedia ada) ...
+    // ... (kod toggleNavButtons, logoutAdmin, form-login) ...
+    function toggleNavButtons() {
+        if (isAdmin) {
+            document.getElementById('nav-jana').style.display = 'inline-block';
+            document.getElementById('nav-keputusan').style.display = 'inline-block';
+        } else {
+            document.getElementById('nav-jana').style.display = 'none';
+            document.getElementById('nav-keputusan').style.display = 'none';
+        }
+    }
+    
+    function logoutAdmin() {
+        dbAuth.signOut().then(() => {
+            isAdmin = false;
+            toggleNavButtons();
+            showPage('login');
+            document.getElementById('login-status').textContent = 'Anda telah log keluar.';
+        });
+    }
+
+    document.getElementById('form-login').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const statusElement = document.getElementById('login-status');
+        statusElement.textContent = 'Sedang log masuk...';
+
+        dbAuth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                isAdmin = true;
+                toggleNavButtons();
+                showPage('daftar');
+                statusElement.textContent = 'Log masuk berjaya!';
+            })
+            .catch((error) => {
+                statusElement.textContent = `Ralat Log Masuk: ${error.message}`;
+            });
+    });
 
 
     // ====================================================================
@@ -432,7 +464,6 @@
 
     function muatkanAcaraPilihan() {
         const selects = ['jana-acara', 'kep-acara']; 
-        // ⚠️ TUKAR ID ke checkbox (ISU 4)
         const checkboxDiv = document.getElementById('reg-acara-checkbox'); 
         
         if (document.getElementById('daftar').classList.contains('active')) {
@@ -442,7 +473,6 @@
             ACARA_SEMUA.forEach(acara => {
                 if (isAcaraAvailable(acara, selectedKategori)) {
                     const input = document.createElement('input');
-                    // ⚠️ TUKAR TYPE ke checkbox (ISU 4)
                     input.type = 'checkbox';
                     input.name = 'reg-acara';
                     input.value = acara;
@@ -459,12 +489,10 @@
                     if (checkboxDiv) checkboxDiv.appendChild(label);
                 }
             });
-            toggleNamaInput(); // Panggil untuk set input handler dan paparan medan
+            toggleNamaInput(); 
         }
 
-        // 2. KEMASKINI: Handle Dropdown untuk Jana Acara dan Keputusan (kekal)
         selects.forEach(selectId => {
-            // ... (kod sedia ada) ...
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
@@ -499,7 +527,6 @@
     }
 
     function toggleNamaInput() {
-        // ⚠️ Ambil semua nilai checkbox yang telah dipilih (ISU 4)
         const selectedCheckboxes = Array.from(document.querySelectorAll('input[name="reg-acara"]:checked'));
         const isRelaySelected = selectedCheckboxes.some(chk => chk.value === '4x100 meter');
         const isIndividualSelected = selectedCheckboxes.some(chk => ACARA_INDIVIDU.includes(chk.value));
@@ -510,13 +537,11 @@
         const inputNoBadan = document.getElementById('reg-no-badan'); 
         const inputPasukan = document.querySelectorAll('.nama-pasukan');
         
-        // Tetapkan event listener untuk huruf besar (untuk input baru/reset)
         if (inputNama) inputNama.oninput = toUpperCase;
         if (inputNoBadan) inputNoBadan.oninput = toUpperCase;
         inputPasukan.forEach(input => input.oninput = toUpperCase);
 
         if (isRelaySelected && isIndividualSelected) {
-            // Jika kedua-dua dipilih (kita semak ralat pada submit) - Paparkan individu sahaja
             divIndividu.style.display = 'grid'; 
             divPasukan.style.display = 'none';
         } else if (isRelaySelected) {
@@ -543,7 +568,6 @@
     document.getElementById('form-daftar-peserta').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // ⚠️ BARU: Ambil semua acara yang dipilih (ISU 4)
         const selectedAcara = Array.from(document.querySelectorAll('input[name="reg-acara"]:checked')).map(chk => chk.value);
         if (selectedAcara.length === 0) { alert('Sila pilih sekurang-kurangnya satu Acara.'); return; }
         
@@ -557,19 +581,16 @@
         let peserta;
         let noBadan = '';
         
-        // HAD PENDAFTARAN: Semak jika pendaftaran terlalu banyak
         if (individualAcaraSelected.length > 3) {
             alert('Had maksimum acara individu ialah 3. Sila batalkan pilihan.');
             return;
         }
 
         if (isRelaySelected) {
-            // Logik Pendaftaran Relay
             const namaPasukan = Array.from(document.querySelectorAll('.nama-pasukan')).map(input => input.value.trim()).filter(n => n);
             if (namaPasukan.length !== 4) { alert('Sila masukkan nama 4 peserta untuk 4x100 meter.'); return; }
             peserta = namaPasukan.join(', ');
 
-            // Semak duplikasi 4x100m 
             if (pendaftaran.some(p => p.acara === '4x100 meter' && p.kategori === kategori && p.jantina === jantina && p.rumah === rumah)) {
                  alert(`Rumah Sukan ${rumah} sudah didaftarkan untuk 4x100 meter ${kategori} ${jantina}.`);
                  return;
@@ -577,11 +598,9 @@
         } 
         
         if (individualAcaraSelected.length > 0) {
-            // Logik Pendaftaran Individu
             peserta = document.getElementById('reg-nama').value.trim();
             noBadan = document.getElementById('reg-no-badan').value.trim().toUpperCase(); 
 
-            // Semak duplikasi No Badan (dalam kategori yang sama)
             if (pendaftaran.some(p => p.noBadan === noBadan && p.noBadan !== '' && p.kategori === kategori && individualAcaraSelected.includes(p.acara))) { 
                 alert(`Nombor Badan ${noBadan} telah digunakan oleh peserta lain. Sila gunakan nombor lain.`);
                 return;
@@ -593,19 +612,16 @@
             return;
         }
 
-        // Simpan ke Firebase (Loop jika berbilang acara individu dipilih)
         showLoading();
         
         let promises = [];
         
-        // Simpan Pendaftaran Individu
         individualAcaraSelected.forEach(acara => {
             const firebaseKey = dbRefPendaftaran.push().key; 
             const dataPeserta = { acara, kategori, jantina, rumah, peserta, noBadan: noBadan, id: firebaseKey }; 
             promises.push(dbRefPendaftaran.child(firebaseKey).set(dataPeserta));
         });
         
-        // Simpan Pendaftaran Relay (jika ada)
         if (isRelaySelected) {
             const firebaseKey = dbRefPendaftaran.push().key; 
             const dataPasukan = { acara: '4x100 meter', kategori, jantina, rumah, peserta, noBadan: 'N/A', id: firebaseKey }; 
@@ -632,9 +648,150 @@
             });
     });
 
-    // ... (kod paparkanPendaftaran dan padamPeserta sedia ada) ...
-    // ... (kod janaAcara dan paparkanJanaAcara sedia ada) ...
+    // 🚨 FUNGSI YANG HILANG: PAPARKAN PENDAFTARAN
+    function paparkanPendaftaran() {
+        const tbody = document.getElementById('table-pendaftaran').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = '';
+        
+        // Susun pendaftaran mengikut Kategori, Jantina, dan Acara
+        pendaftaran.sort((a, b) => {
+            const kategoriA = KATEGORI.indexOf(a.kategori);
+            const kategoriB = KATEGORI.indexOf(b.kategori);
+            if (kategoriA !== kategoriB) return kategoriA - kategoriB;
+            if (a.jantina !== b.jantina) return a.jantina.localeCompare(b.jantina);
+            return a.acara.localeCompare(b.acara);
+        });
 
+        pendaftaran.forEach(p => {
+            const row = tbody.insertRow();
+            row.insertCell().textContent = p.acara;
+            row.insertCell().textContent = p.kategori;
+            row.insertCell().textContent = p.jantina;
+            row.insertCell().textContent = p.rumah;
+            row.insertCell().textContent = p.peserta.substring(0, 15) + (p.peserta.length > 15 ? '...' : ''); 
+            row.insertCell().textContent = p.noBadan;
+            
+            const cellTindakan = row.insertCell();
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '❌ Padam';
+            deleteButton.onclick = () => padamPeserta(p.id);
+            deleteButton.className = 'btn';
+            deleteButton.style.backgroundColor = '#d32f2f';
+            deleteButton.style.padding = '5px 10px';
+            deleteButton.style.fontSize = '0.9em';
+            if (!isAdmin) deleteButton.disabled = true;
+            cellTindakan.appendChild(deleteButton);
+        });
+        
+        hideLoading();
+    }
+
+    // 🚨 FUNGSI YANG HILANG: PADAM PESERTA
+    function padamPeserta(id) {
+        if (!isAdmin) return alert("Akses Ditolak. Hanya Admin boleh memadam data.");
+        if (confirm('Adakah anda pasti mahu memadam peserta ini?')) {
+            showLoading();
+            dbRefPendaftaran.child(id).remove()
+                .then(() => {
+                    alert('Pendaftaran berjaya dipadam.');
+                    hideLoading();
+                })
+                .catch(error => {
+                    console.error("Ralat Padam Pendaftaran:", error);
+                    alert('Gagal memadam pendaftaran. Lihat konsol untuk ralat.');
+                    hideLoading();
+                });
+        }
+    }
+
+
+    // --- Halaman Jana Acara ---
+    async function janaAcara() {
+        if (!isAdmin) return alert("Akses Ditolak. Hanya Admin boleh menjana acara.");
+        const acara = document.getElementById('jana-acara').value;
+        const kategori = document.getElementById('jana-kategori').value;
+        const jantina = document.getElementById('jana-jantina').value;
+        const key = getUniqueKey(acara, kategori, jantina);
+        
+        showLoading();
+
+        // Tapis peserta yang layak untuk acara ini
+        const pesertaLayak = pendaftaran.filter(p => 
+            p.acara === acara && p.kategori === kategori && p.jantina === jantina
+        );
+        
+        if (pesertaLayak.length === 0) {
+            hideLoading();
+            alert(`Tiada peserta berdaftar untuk ${acara} ${kategori} ${jantina}.`);
+            return;
+        }
+
+        shuffleArray(pesertaLayak); 
+        
+        let acaraData = [];
+        const isPadang = isAcaraPadang(acara);
+
+        if (isPadang) {
+            // Acara Padang: Guna slot sebagai Giliran (1 hingga N)
+            acaraData = pesertaLayak.map((p, index) => ({
+                id: p.id,
+                rumah: p.rumah,
+                peserta: p.peserta,
+                slot: index + 1 // Giliran
+            }));
+        } else {
+            // Acara Balapan: Guna slot sebagai Lorong (random)
+            const maxLorong = LORONG[acara] || 6;
+            let lorongTersedia = Array.from({ length: maxLorong }, (_, i) => i + 1);
+            shuffleArray(lorongTersedia);
+            
+            acaraData = pesertaLayak.map((p, index) => ({
+                id: p.id,
+                rumah: p.rumah,
+                peserta: p.peserta,
+                slot: lorongTersedia[index % maxLorong] // Guna lorong yang di-shuffle
+            }));
+            
+            // Susun semula mengikut Lorong untuk paparan
+            acaraData.sort((a, b) => a.slot - b.slot);
+        }
+
+        const dataUntukSimpan = { key, acara, kategori, jantina, peserta: acaraData };
+        
+        dbRefAcaraDijana.child(key).set(dataUntukSimpan)
+            .then(() => {
+                paparkanJanaAcara(dataUntukSimpan);
+                alert('✅ Acara berjaya dijana dan disimpan!');
+                hideLoading();
+            })
+            .catch(error => {
+                console.error("Ralat Jana Acara:", error);
+                alert('Gagal menjana acara. Lihat konsol untuk ralat.');
+                hideLoading();
+            });
+    }
+
+    function paparkanJanaAcara(data) {
+        if (!data) return;
+        
+        const isPadang = isAcaraPadang(data.acara);
+        const slotLabel = isPadang ? 'Giliran' : 'Lorong';
+
+        document.getElementById('jana-tajuk').textContent = `Senarai ${slotLabel} / Giliran: ${data.acara} ${data.kategori} ${data.jantina}`;
+        
+        const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
+        const thead = document.querySelector('#table-jana-acara thead tr');
+        tbody.innerHTML = '';
+        thead.innerHTML = `<th>${slotLabel}</th><th>Rumah Sukan</th><th>Peserta</th>`;
+
+        data.peserta.forEach(p => {
+            const row = tbody.insertRow();
+            row.insertCell().textContent = p.slot;
+            row.insertCell().textContent = p.rumah;
+            row.insertCell().textContent = p.peserta;
+        });
+        document.getElementById('table-jana-acara').style.display = 'table';
+    }
 
     // --- Halaman Keputusan (Firebase Read/Write) ---
     async function paparPesertaKeputusan() {
@@ -651,7 +808,7 @@
              return;
         }
 
-        const pesertaDijana = acaraDijana[key];
+        const pesertaDijana = acaraDijana[key] ? acaraDijana[key].peserta : null;
         document.getElementById('kep-tajuk').textContent = `Input Keputusan: ${acara} ${kategori} ${jantina}`;
         document.getElementById('form-masuk-keputusan').style.display = 'none';
         
@@ -667,11 +824,11 @@
         const thead = document.querySelector('#table-masuk-keputusan thead tr');
         tbody.innerHTML = '';
         
-        // ⚠️ ISU 5: BORANG KHAS UNTUK ACARA PADANG
+        // ⚠️ BORANG KHAS UNTUK ACARA PADANG (ISU 5)
         if (isPadang) {
-            let numPercubaan = 3; // Lontar Peluru, Lompat Jauh
+            let numPercubaan = 3; 
             if (acara === 'Lompat Tinggi') {
-                numPercubaan = 6; // Boleh diubah mengikut format sebenar
+                numPercubaan = 6; 
             }
 
             // HEADER JADUAL PADANG
@@ -730,7 +887,7 @@
             });
 
         } else {
-            // ACARA BALAPAN (Sedia Ada)
+            // ACARA BALAPAN 
             thead.innerHTML = '<th>Rumah Sukan</th><th>Peserta</th><th>Keputusan (<span id="unit-keputusan-balapan"></span>)</th><th>Kedudukan (1 - 6)</th>';
             document.getElementById('unit-keputusan-balapan').textContent = unit;
             
@@ -747,7 +904,7 @@
                 inputKeputusan.type = 'number';
                 inputKeputusan.step = 'any';
                 inputKeputusan.name = `keputusan-${index}`;
-                inputKeputusan.required = false; // Tidak wajib isi jika tidak ada kedudukan
+                inputKeputusan.required = false; 
                 cellKeputusan.appendChild(inputKeputusan);
                 
                 const cellKedudukan = row.insertCell();
@@ -783,16 +940,16 @@
         let results = [];
         let kedudukanUsed = [];
 
-        rows.forEach((row, index) => {
+        for (let index = 0; index < rows.length; index++) {
+            const row = rows[index];
             const rumah = row.dataset.rumah;
             const peserta = row.cells[1].textContent;
             const id = row.dataset.id; 
             let resultEntry = { id, rumah, peserta };
             let kedudukanVal = 0;
             let keputusanVal = 0;
-            
+
             if (isPadang) {
-                // LOGIK SIMPAN KEPUTUSAN ACARA PADANG (ISU 5)
                 const numPercubaan = (acara === 'Lompat Tinggi') ? 6 : 3;
                 
                 const inputKedudukan = row.querySelector(`select[name="kedudukan-${index}"]`);
@@ -801,44 +958,43 @@
                 kedudukanVal = inputKedudukan.value ? parseInt(inputKedudukan.value) : 0;
                 keputusanVal = inputPB.value ? parseFloat(inputPB.value) : 0;
                 
-                // Kumpulkan data percubaan
                 for (let i = 1; i <= numPercubaan; i++) {
                     const inputP = row.querySelector(`input[name="P${i}-${index}"]`);
                     resultEntry[`P${i}`] = inputP.value ? parseFloat(inputP.value) : null;
                 }
                 
-                // Semak Kedudukan Duplikasi
-                if (kedudukanVal && kedudukanUsed.includes(kedudukanVal)) {
-                    alert(`Kedudukan ${kedudukanVal} telah diberikan lebih daripada sekali. Sila betulkan.`);
-                    e.preventDefault();
-                    return;
-                }
-                if (kedudukanVal) kedudukanUsed.push(kedudukanVal);
-                
             } else {
-                // LOGIK SIMPAN KEPUTUSAN ACARA BALAPAN (Sedia Ada)
+                // Balapan
                 const inputKedudukan = row.querySelector(`select[name="kedudukan-${index}"]`);
                 const inputKeputusan = row.querySelector(`input[name="keputusan-${index}"]`);
                 
                 kedudukanVal = inputKedudukan.value ? parseInt(inputKedudukan.value) : 0;
                 keputusanVal = inputKeputusan.value ? parseFloat(inputKeputusan.value) : 0;
-
-                // Semak Kedudukan Duplikasi
-                if (kedudukanVal && kedudukanUsed.includes(kedudukanVal)) {
-                    alert(`Kedudukan ${kedudukanVal} telah diberikan lebih daripada sekali. Sila betulkan.`);
-                    e.preventDefault();
-                    return;
-                }
-                if (kedudukanVal) kedudukanUsed.push(kedudukanVal);
             }
 
-            // Simpan hasil akhir (terpakai untuk Balapan dan Padang)
-            resultEntry.kedudukan = kedudukanVal;
-            resultEntry.keputusan = keputusanVal; // Guna Keputusan Terbaik (PB) untuk Padang
-            resultEntry.mata = kedudukanVal ? MATA[kedudukanVal] : 0;
-            
-            results.push(resultEntry);
-        });
+            // Semak Kedudukan Duplikasi
+            if (kedudukanVal !== 0) {
+                if (kedudukanUsed.includes(kedudukanVal)) {
+                    alert(`Kedudukan ${kedudukanVal} telah diberikan lebih daripada sekali. Sila betulkan.`);
+                    return;
+                }
+                kedudukanUsed.push(kedudukanVal);
+            }
+
+            if (kedudukanVal !== 0) {
+                resultEntry.kedudukan = kedudukanVal;
+                resultEntry.keputusan = keputusanVal; 
+                resultEntry.mata = MATA[kedudukanVal];
+                results.push(resultEntry);
+            }
+        }
+        
+        // Pastikan 3 kedudukan teratas telah diisi
+        const top3Filled = [1, 2, 3].every(rank => kedudukanUsed.includes(rank));
+        if (!top3Filled) {
+             const confirmSkip = confirm("Kedudukan 1, 2, atau 3 tidak lengkap. Adakah anda pasti mahu menyimpan keputusan yang tidak lengkap?");
+             if (!confirmSkip) return;
+        }
 
         const resultData = {
             key, acara, kategori, jantina,
@@ -857,16 +1013,14 @@
             });
     });
 
-    // FUNGSI PAPARKAN KEPUTUSAN DISIMPAN (Diperbaiki untuk mengisi 2 jadual - ISU 3)
+    // FUNGSI PAPARKAN KEPUTUSAN DISIMPAN (ISU 3)
     function paparkanKeputusanDisimpan() {
         const tbodyKeputusan = document.getElementById('table-keputusan-disimpan').getElementsByTagName('tbody')[0];
-        // ⚠️ Tambah rujukan kepada jadual di halaman Analisis (ISU 3)
         const tbodyAnalisis = document.getElementById('table-keputusan-pemenang-analisis') ? document.getElementById('table-keputusan-pemenang-analisis').getElementsByTagName('tbody')[0] : null;
 
         tbodyKeputusan.innerHTML = '';
-        if (tbodyAnalisis) tbodyAnalisis.innerHTML = ''; // Kosongkan juga tbody Analisis
+        if (tbodyAnalisis) tbodyAnalisis.innerHTML = ''; 
         
-        // Susun Keputusan mengikut Acara, Kategori, Jantina
         const keputusanTersusun = [...keputusan].sort((a, b) => {
             if (a.acara !== b.acara) return a.acara.localeCompare(b.acara);
             const kategoriA = KATEGORI.indexOf(a.kategori);
@@ -880,35 +1034,37 @@
             const kedua = k.results.find(r => r.kedudukan === 2);
             const ketiga = k.results.find(r => r.kedudukan === 3);
 
+            const getPesertaDisplay = (r) => r ? `${r.rumah} (${r.peserta.substring(0, 15)}${r.peserta.length > 15 ? '...' : ''})` : '-';
+
+
             // Masukkan ke jadual di halaman Keputusan
             const rowKeputusan = tbodyKeputusan.insertRow();
             rowKeputusan.insertCell().textContent = k.acara;
             rowKeputusan.insertCell().textContent = k.kategori;
             rowKeputusan.insertCell().textContent = k.jantina;
-            rowKeputusan.insertCell().textContent = juara ? `${juara.rumah} (${juara.peserta.substring(0, 10)}...)` : '-';
-            rowKeputusan.insertCell().textContent = kedua ? `${kedua.rumah} (${kedua.peserta.substring(0, 10)}...)` : '-';
-            rowKeputusan.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketiga.peserta.substring(0, 10)}...)` : '-';
+            rowKeputusan.insertCell().textContent = getPesertaDisplay(juara);
+            rowKeputusan.insertCell().textContent = getPesertaDisplay(kedua);
+            rowKeputusan.insertCell().textContent = getPesertaDisplay(ketiga);
 
 
-            // ⚠️ Masukkan juga ke jadual di halaman Analisis (ISU 3)
+            // Masukkan juga ke jadual di halaman Analisis
             if (tbodyAnalisis) {
                 const rowAnalisis = tbodyAnalisis.insertRow();
                 rowAnalisis.insertCell().textContent = k.acara;
                 rowAnalisis.insertCell().textContent = k.kategori;
                 rowAnalisis.insertCell().textContent = k.jantina;
-                rowAnalisis.insertCell().textContent = juara ? `${juara.rumah} (${juara.peserta.substring(0, 10)}...)` : '-';
-                rowAnalisis.insertCell().textContent = kedua ? `${kedua.rumah} (${kedua.peserta.substring(0, 10)}...)` : '-';
-                rowAnalisis.insertCell().textContent = ketiga ? `${ketiga.rumah} (${ketiga.peserta.substring(0, 10)}...)` : '-';
+                rowAnalisis.insertCell().textContent = getPesertaDisplay(juara);
+                rowAnalisis.insertCell().textContent = getPesertaDisplay(kedua);
+                rowAnalisis.insertCell().textContent = getPesertaDisplay(ketiga);
             }
         });
     }
     
-    // FUNGSI ANALISIS (Sedia Ada, cuma memastikan panggilan paparkanKeputusanDisimpan)
+    // FUNGSI ANALISIS 
     function kiraAnalisis() {
         let markahRumah = { "Merah": 0, "Biru": 0, "Kuning": 0 };
         let pecahanAcara = {}; 
 
-        // ... (kod kiraan markah sedia ada) ...
         keputusan.forEach(k => {
             const key = k.key;
             pecahanAcara[key] = {
@@ -928,7 +1084,6 @@
         document.getElementById('score-biru').querySelector('.total-points').textContent = markahRumah.Biru;
         document.getElementById('score-kuning').querySelector('.total-points').textContent = markahRumah.Kuning;
 
-        // ... (kod paparan pecahan markah sedia ada) ...
         const pecahanDiv = document.getElementById('pecahan-markah');
         pecahanDiv.innerHTML = '';
         
@@ -936,7 +1091,7 @@
             const dataA = pecahanAcara[a];
             const dataB = pecahanAcara[b];
             
-            if (dataA.acara !== dataB.acara) return dataA.acara.localeCompare(dataB.acara);
+            if (dataA.acara !== dataB.acara) return dataA.acara.localeCompare(b.acara);
             const kategoriA = KATEGORI.indexOf(dataA.kategori);
             const kategoriB = KATEGORI.indexOf(dataB.kategori);
             if (kategoriA !== kategoriB) return kategoriA - kategoriB;
@@ -958,7 +1113,6 @@
             pecahanDiv.appendChild(eventDiv);
         });
         
-        // Panggil untuk mengisi jadual pemenang di halaman analisis
         paparkanKeputusanDisimpan(); 
     }
 
@@ -968,6 +1122,5 @@
     });
 
 </script>
-
 </body>
 </html>
