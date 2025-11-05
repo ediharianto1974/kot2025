@@ -234,7 +234,7 @@
     // DIUBAH: Memisahkan Tahun 4 dan Tahun 5
     const KATEGORI = ["Tahun 1", "Tahun 2", "Tahun 3", "Tahun 4", "Tahun 5", "Tahun 6"]; 
     
-    // DIUBAH: Tambah Lorong untuk 100 Meter Berpagar (Anggap 6 lorong seperti 100m)
+    // DIUBAH: Tambah Lorong untuk 100 Meter Berpagar
     const LORONG = { "100 meter": 6, "200 meter": 3, "4x100 meter": 3, "100 Meter Berpagar": 6 };
     const MATA = { "1": 5, "2": 3, "3": 1 };
 
@@ -254,7 +254,7 @@
             }
         }
         
-        // 100 Meter Berpagar hanya untuk Tahun 4, 5, 6
+        // Sekat 100 Meter Berpagar hanya untuk Tahun 4, 5, 6
         if (acara === "100 Meter Berpagar") {
             return tahun4_6.includes(kategori);
         }
@@ -273,6 +273,7 @@
         }
     }
 
+    // Fungsi untuk menukar input ke huruf besar
     const toUpperCase = (event) => {
         event.target.value = event.target.value.toUpperCase();
     };
@@ -309,6 +310,7 @@
         if (document.getElementById('analisis').classList.contains('active')) {
              kiraAnalisis();
         }
+        hideLoading();
     });
 
     // ====================================================================
@@ -379,6 +381,7 @@
         dbAuth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 statusMsg.textContent = 'Log masuk berjaya!';
+                // Pemprosesan dihandle oleh onAuthStateChanged
             })
             .catch((error) => {
                 console.error(error);
@@ -393,16 +396,22 @@
             isAdmin = true;
             toggleNavButtons(true);
             
-            if (document.getElementById('login').classList.contains('active')) {
+            const currentPage = document.querySelector('.page.active');
+            if (!currentPage || currentPage.id === 'login') {
                  showPage('daftar'); 
             }
         } else {
             isAdmin = false;
             toggleNavButtons(false);
             
-            const currentPage = document.querySelector('.page.active').id;
-            if (['jana', 'keputusan', 'login'].includes(currentPage)) {
+            const currentPage = document.querySelector('.page.active');
+            if (currentPage && ['jana', 'keputusan'].includes(currentPage.id)) {
                  showPage('daftar'); 
+            } else if (currentPage && currentPage.id !== 'login') {
+                // Kekal di halaman sedia ada jika bukan Admin page
+            }
+            if (!currentPage) {
+                 showPage('daftar'); // Tunjukkan halaman daftar sebagai lalai
             }
         }
         hideLoading();
@@ -420,7 +429,7 @@
 
             const currentValue = selectElement.value;
             
-            let selectedKategori = 'Tahun 6'; 
+            let selectedKategori; 
             if (selectId.startsWith('reg')) {
                 selectedKategori = document.getElementById('reg-kategori').value;
             } else if (selectId.startsWith('jana')) {
@@ -447,6 +456,7 @@
                 if (firstAcara) toggleNamaInput();
             }
 
+            // Cuba kekalkan nilai sebelumnya atau tetapkan kepada acara pertama yang sah
             if ([...selectElement.options].some(opt => opt.value === currentValue)) {
                 selectElement.value = currentValue;
             } else {
@@ -463,11 +473,10 @@
         const inputNoBadan = document.getElementById('reg-no-badan'); 
         const inputPasukan = document.querySelectorAll('.nama-pasukan');
         
-        const toUpperCase = (event) => {
-            event.target.value = event.target.value.toUpperCase();
-        };
+        // Pastikan input nama/no badan sentiasa uppercase
         if (inputNama) inputNama.addEventListener('input', toUpperCase);
         if (inputNoBadan) inputNoBadan.addEventListener('input', toUpperCase);
+        inputPasukan.forEach(input => input.addEventListener('input', toUpperCase));
 
         if (acara === '4x100 meter') {
             divIndividu.style.display = 'none';
@@ -518,7 +527,7 @@
             const inputNoBadan = document.getElementById('reg-no-badan');
             noBadan = inputNoBadan.value.trim().toUpperCase(); 
 
-            // Semak duplikasi Nombor Badan (Sekarang semak dalam Kategori yang sama)
+            // Semak duplikasi Nombor Badan (Semak dalam Kategori yang sama untuk ketepatan)
             if (pendaftaran.some(p => p.noBadan === noBadan && p.noBadan !== '' && p.kategori === kategori)) { 
                 alert(`Nombor Badan ${noBadan} telah digunakan dalam kategori ${kategori}. Sila gunakan nombor lain.`);
                 return;
@@ -611,8 +620,7 @@
         }
 
         const isPadang = isAcaraPadang(acara);
-        // Semak LORONG untuk mendapatkan maxSlot yang betul, jika acara larian (bukan padang)
-        let maxSlot = isPadang ? pesertaAcara.length : LORONG[acara] || 6; // Default 6 jika tiada dalam LORONG (sepatutnya ada)
+        let maxSlot = isPadang ? pesertaAcara.length : LORONG[acara] || 6; 
         
         let slots = pesertaAcara.map((p, index) => ({ ...p, slot: isPadang ? (index + 1) : 0 }));
         shuffleArray(slots);
@@ -640,7 +648,7 @@
         const tbody = document.getElementById('table-jana-acara').getElementsByTagName('tbody')[0];
         tbody.innerHTML = '';
         slots.sort((a, b) => a.slot - b.slot).forEach(p => {
-            const row = tbody.insertRow();
+            const row = tbody.insertCell();
             row.insertCell().textContent = p.slot;
             row.insertCell().textContent = p.rumah;
             row.insertCell().textContent = p.peserta;
@@ -831,14 +839,7 @@
 
     // --- Inisialisasi Aplikasi ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Tambah Listener Uppercase untuk input pasukan (4x100m)
-        const inputPasukan = document.querySelectorAll('.nama-pasukan');
-        const toUpperCase = (event) => { event.target.value = event.target.value.toUpperCase(); };
-        inputPasukan.forEach(input => {
-            input.addEventListener('input', toUpperCase);
-        });
-        
-        // Panggilan awal muatkanAcaraPilihan dihandle oleh onAuthStateChanged selepas menentukan status Admin
+        // Logik initialization kini dihandle oleh dbAuth.onAuthStateChanged
     });
 
 </script>
